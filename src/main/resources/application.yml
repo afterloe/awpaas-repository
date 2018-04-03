@@ -1,0 +1,21 @@
+server:
+  port: 8080
+  undertow:
+    direct-buffers: true
+
+spring:
+  application:
+    name: "awpaas-repository"
+  jackson:
+    serialization:
+      indent_output: true
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: 1.0.0
+    time: 2018年04月03日 14:39:05
+  describe: 备份模拟数据服务
+  home: /
+  author: afterloe.L
+  licensed: MIT Licensed

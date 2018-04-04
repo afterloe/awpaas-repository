@@ -39,6 +39,11 @@ compileTestKotlin {
 
 repositories {
     mavenCentral()
+    maven { url "https://repo.spring.io/milestone" }
+}
+
+ext {
+    springCloudVersion = 'Finchley.M9'
 }
 
 // 去除 tomcat 依赖
@@ -47,11 +52,22 @@ configurations {
 }
 
 dependencies {
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web'
+    compile group: "org.springframework.boot", name: "spring-boot-starter-security"
+    compile group: "org.springframework.boot", name: "spring-boot-starter-webflux"
+    compile group: "org.springframework.boot", name: "spring-boot-starter-actuator" // spring boot actuator
+    compile group: "org.springframework.cloud", name: "spring-cloud-starter-netflix-eureka-server"
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-undertow' // undertow web container
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator' // spring boot actuator
-    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin'
+
+    compile group: "com.fasterxml.jackson.module", name: "jackson-module-kotlin"
     compile group: "org.jetbrains.kotlin", name: "kotlin-stdlib-jdk8"
     compile group: "org.jetbrains.kotlin", name: "kotlin-reflect"
     testCompile group: "org.springframework.boot", name: "spring-boot-starter-test"
+    testCompile group: "io.projectreactor", name: "reactor-test"
+    testCompile group: "org.springframework.security", name: "spring-security-test"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
 }

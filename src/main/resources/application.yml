@@ -9,7 +9,13 @@ spring:
   jackson:
     serialization:
       indent_output: true
-
+  security:
+    basic:
+      enabled: true
+    user:
+      name: root
+      password: Awpaas1020.cn
+      
 info:
   app:
     name: ${spring.application.name}
@@ -19,13 +25,6 @@ info:
   home: /
   author: afterloe.L
   licensed: MIT Licensed
-
-security:
-  basic:
-    enabled: true
-  user:
-    name: root
-    password: user123
 
 eureka:
   server:
@@ -43,4 +42,4 @@ eureka:
     healthcheck:
       enable: true
     serviceUrl:
-      defaultZone: http://${security.user.name}:${security.user.password}@awpaas-repository-1:8080/eureka/
+      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@awpaas-repository-1:8080/eureka/

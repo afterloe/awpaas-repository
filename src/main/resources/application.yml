@@ -15,7 +15,11 @@ spring:
     user:
       name: root
       password: Awpaas1020.cn
-      
+
+security:
+  basic:
+    enabled: true
+
 info:
   app:
     name: ${spring.application.name}

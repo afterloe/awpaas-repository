@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8761
   undertow:
     direct-buffers: true
 
@@ -16,9 +16,9 @@ spring:
       name: root
       password: Awpaas1020.cn
 
-security:
-  basic:
-    enabled: true
+management:
+  security:
+    enabled: false
 
 info:
   app:

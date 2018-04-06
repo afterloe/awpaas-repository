@@ -1,4 +1,4 @@
-package cn.cityworks
+package cn.awpaas
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

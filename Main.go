@@ -28,40 +28,7 @@ func init() {
 func startDefault() {
 	logger.Info("main",fmt.Sprintf("listen parameter is null, will start server in %s default", defAddr))
 	logger.Info("main",fmt.Sprintf("server is init success... started pid is %d", pid))
-	cli.StartUpTCPServer(&defAddr, config.Get("custom").(map[string]interface{}))
-}
-
-/**
-	启动缓存服务
- */
-func startUpCacheService(cfg map[string]interface{}) {
-	addr, port := cfg["addr"], cfg["port"]
-	if nil == addr {
-		addr = "127.0.0.1"
-	}
-	if nil == port {
-		port = "6379"
-	}
-	addrStr := fmt.Sprintf("%s:%s", addr, port)
-	logger.Info("main",fmt.Sprintf("cache server will listen to %s ", addrStr))
-	cli.StartUpCacheServer(&addrStr, cfg["channel"].([]interface{}))
-}
-
-/**
-	启动网关服务
- */
-func startUpGatewayService(cfg map[string]interface{}) {
-	addr, port := cfg["addr"], cfg["port"]
-	if nil == addr {
-		addr = "127.0.0.1"
-	}
-	if nil == port {
-		port = "8080"
-	}
-	multiServiceCfg(cfg["multiCore"].(map[string]interface{}))
-	addrStr := fmt.Sprintf("%s:%s", addr, port)
-	logger.Info("main",fmt.Sprintf("gateway server will start in %s ", addrStr))
-	cli.StartUpTCPServer(&addrStr, config.Get("custom").(map[string]interface{}))
+	cli.StartUpDaemonService(&defAddr, config.Get("custom").(map[string]interface{}))
 }
 
 /**
@@ -73,7 +40,7 @@ func startUpDaemonService(cfg map[string]interface{}) {
 		addr = "127.0.0.1"
 	}
 	if nil == port {
-		port = "8081"
+		port = "8080"
 	}
 	addrStr := fmt.Sprintf("%s:%s", addr, port)
 	logger.Info("main",fmt.Sprintf("daemon server will start in %s ", addrStr))
@@ -116,13 +83,9 @@ func main() {
 	logger.Info("main", "service init ...")
 	logger.Info("main",fmt.Sprintf("machine is %d cpus.", cpuNumber))
 	serverCfg := config.Get("server").(map[string]interface{})
-	finish := make(chan bool)
 	if nil == serverCfg {
 		startDefault()
 		return
 	}
-	go startUpCacheService(serverCfg["cache"].(map[string]interface{})) // 缓存线程
-	go startUpDaemonService(serverCfg["daemon"].(map[string]interface{})) // 守护线程
-	startUpGatewayService(serverCfg["gateway"].(map[string]interface{})) // 主线程
-	<-finish
+	startUpDaemonService(serverCfg["daemon"].(map[string]interface{})) // 守护线程
 }

@@ -50,6 +50,8 @@ func init() {
 
 /**
 	读取env中的数据进行覆盖package.json中的内容
+
+TODO
  */
 func readEnv() {
 	redis_addr := os.Getenv("REDIS_ADDR")

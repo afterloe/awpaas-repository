@@ -1,2 +1,3 @@
 # awpaas-repository
-manager server
+
+manager server power by docker.

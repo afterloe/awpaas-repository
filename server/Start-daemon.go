@@ -6,8 +6,6 @@ import (
 	"../integrate/logger"
 	"../integrate/notSupper"
 	"../routers"
-	"../config"
-	"../service/cache"
 	"os"
 )
 
@@ -48,7 +46,6 @@ func initDaemonService(engine *gin.Engine, cfg interface{}) {
 	engine.NoMethod(notSupper.NotSupper(&notSupperStr))
 	infoEntryPoint(engine)
 	routers.Execute(engine.Group("/v1"))
-	cache.LoadCache(config.GetByTarget(cfg,"whiteList").([]interface{}))
 	logger.Info("daemon", "daemon service is ready ...")
 }
 

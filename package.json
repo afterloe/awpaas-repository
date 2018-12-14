@@ -1,14 +1,21 @@
 {
-  "name": "cynomys_go",
-  "version": "0.0.1",
-  "author": "afterloe[lm6289511@gmai.com]",
-  "homePage": "https://github.com/afterloe",
+  "custom": {
+    "tokenName": "access-token",
+    "needToken": true,
+    "whiteList": ["/member/login", "/fs/preview"],
+    "authorizedServcieName": "authorize"
+  },
+  "info": {
+    "name": "awpaas-repository",
+    "version": "1.0.1",
+    "author": "afterloe[lm6289511@gmai.com]",
+    "homePage": "https://github.com/afterloe",
+    "remarks": "awpaas 微服务仓库，负责服务镜像的管理，镜像包含了可运行程序和对应的版本号，通过镜像可以启动容器、服务。当程序更新的时，提供最新版本的镜像即可完成更新，当出现错误或问题时，镜像就像快照一样可以快速对服务或容器进行恢复。"
+  },
   "server": {
-    "addr": "127.0.0.1",
-    "port": "8080",
-    "multiCore": {
-      "enable": false,
-      "num": 4
+    "daemon": {
+      "addr": "0.0.0.0",
+      "port": "8080"
     }
   },
   "dependencies": {
@@ -19,10 +26,10 @@
   },
   "services": {
     "docker-cli": {
-      "version": "1.36",
+      "version": "1.39",
       "socket": {
         "enable": true,
-        "addr": "yyy:2376"
+        "addr": "http://127.0.0.1:11000"
       }
     }
   }

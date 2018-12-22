@@ -2,12 +2,12 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
-	"../services/warehouse"
-	"../util"
 	"net/http"
+	"../services/remote"
+	"../util"
 )
 
-func DockerList(context *gin.Context) {
-	reply  := warehouse.GetList()
+func RemoteList(context *gin.Context) {
+	reply  := remote.GetList()
 	context.JSON(http.StatusOK, util.Success(reply))
 }

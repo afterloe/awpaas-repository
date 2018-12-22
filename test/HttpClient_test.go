@@ -2,7 +2,7 @@ package test
 
 import (
 	"testing"
-	"../integrate/httpClient"
+	"../integrate/soaClient"
 	"encoding/json"
 	"fmt"
 )
@@ -25,14 +25,12 @@ func FormatToString(vol interface{}) (string, error){
 }
 
 func Test_HttpClient_demo(t *testing.T) {
-	reply := httpClient.Call("GET",  "http://192.168.3.21:180/v2/_catalog", nil, nil)
-	t.Log(reply)
-	item, e := FormatToStruct(&reply)
-	if nil != e {
-		t.Error(e)
+	reply, err := soaClient.Call("GET",  "192.168.3.21:180", "/v2/_catalog", nil, nil)
+	if nil != err {
+		t.Error(err)
 	}
-	t.Log(item)
-	for k, v := range  item {
+	t.Log(reply)
+	for k, v := range  reply {
 		t.Log(fmt.Sprintf("key is %s -> value is %s", k, v))
 	}
 }

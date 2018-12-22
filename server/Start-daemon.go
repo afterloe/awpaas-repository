@@ -44,11 +44,12 @@ func initDaemonService(engine *gin.Engine, cfg interface{}) {
 	engine.Use(notSupper.HasError())
 	engine.NoRoute(notSupper.NotFound(&notFoundStr))
 	engine.NoMethod(notSupper.NotSupper(&notSupperStr))
+	engine.MaxMultipartMemory = 120 << 20 // 最大上传文件为120 mb
 	infoEntryPoint(engine)
 	routers.Execute(engine.Group("/v1"))
 	logger.Info("daemon", "daemon service is ready ...")
 }
 
-func infoEntryPoint(c *gin.Engine) {
-	c.GET("/info", routers.Info)
+func infoEntryPoint(cxt *gin.Engine) {
+	cxt.GET("/info", routers.Info)
 }

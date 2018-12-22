@@ -42,7 +42,8 @@ func Encode(params map[string]interface{}) string {
 }
 
 func Call(method, serviceName, url string, body io.ReadCloser, header map[string]string) (map[string]interface{}, error) {
-	remote, err := http.NewRequest(method, fmt.Sprintf("http://%s%s", serviceName, url), body)
+	reqUrl := fmt.Sprintf("http://%s%s", serviceName, url)
+	remote, err := http.NewRequest(method, reqUrl, body)
 	for key, value := range header {
 		remote.Header.Add(key, value)
 	}
@@ -54,7 +55,7 @@ func Call(method, serviceName, url string, body io.ReadCloser, header map[string
 		return nil, err
 	} else {
 		defer response.Body.Close()
-		logger.Logger("soa-client", fmt.Sprintf("%3d | %-7s | %s", response.StatusCode, method, url))
+		logger.Logger("soa-client", fmt.Sprintf("%3d | %-7s | %s", response.StatusCode, method, reqUrl))
 		reply, err := ioutil.ReadAll(response.Body)
 		if nil != err {
 			return nil, err

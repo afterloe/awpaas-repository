@@ -9,4 +9,5 @@ import (
  */
 func Execute(route *gin.RouterGroup) {
 	route.GET("/remote/repository", RemoteList)
+	route.GET("/warehouse/list", WarehouseList)
 }

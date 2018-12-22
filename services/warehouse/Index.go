@@ -6,19 +6,25 @@ import (
 )
 
 var (
-	addr, listUrl  string
+	addr,port  string
 )
 
 func init() {
-	warehouse := config.GetByTarget(config.Get("services"), "warehouse")
+	warehouse := config.GetByTarget(config.Get("services"), "db")
 	addr = config.GetByTarget(warehouse, "addr").(string)
-	listUrl = "/v2/_catalog"
+	port = config.GetByTarget(warehouse, "port").(string)
+	addr += ":" + port
 }
 
-func GetList() []interface{} {
-	reply, err := soaClient.Call("GET", addr, listUrl, nil, nil)
+func GetList(skip, limit string) []interface{} {
+	params := soaClient.Encode(map[string]interface{}{
+		"skip": skip,
+		"limit": limit,
+		"include_docs": "true",
+	})
+	reply, err := soaClient.Call("GET", addr, "/registry/_all_docs?" + params, nil, nil)
 	if nil != err {
 		return make([]interface{}, 0)
 	}
-	return  reply["repositories"].([]interface{})
+	return  reply["rows"].([]interface{})
 }

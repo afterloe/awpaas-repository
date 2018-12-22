@@ -8,6 +8,6 @@ import (
 	路由列表
  */
 func Execute(route *gin.RouterGroup) {
-	route.GET("/index", Home)
-	route.GET("/docker/repository", DockerList)
+	route.GET("/remote/repository", RemoteList)
+	route.GET("/warehouse/list", WarehouseList)
 }

@@ -25,6 +25,15 @@
     "github.com/lib/pq": "laster"
   },
   "services": {
+    "warehouse": {
+      "addr": "192.168.3.21:180"
+    },
+    "db": {
+      "addr": "192.168.3.21",
+      "port": "5984",
+      "username": "ascs",
+      "password": "ascs.tech"
+    },
     "docker-cli": {
       "version": "1.39",
       "socket": {

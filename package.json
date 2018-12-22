@@ -25,6 +25,9 @@
     "github.com/lib/pq": "laster"
   },
   "services": {
+    "warehouse": {
+      "addr": "192.168.3.21:180"
+    },
     "docker-cli": {
       "version": "1.39",
       "socket": {

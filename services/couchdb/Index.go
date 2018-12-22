@@ -7,3 +7,7 @@ var (
 func init() {
 
 }
+
+func toRemote() {
+
+}

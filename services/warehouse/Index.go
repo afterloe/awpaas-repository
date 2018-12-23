@@ -24,6 +24,7 @@ func init() {
 type Module struct {
 	Name, Group, Remarks, Version, Fid string
 	_id string
+	PackInfo map[string]interface{}
 }
 
 /**
@@ -45,9 +46,28 @@ func (this *Module) Check(args ...string) error {
 }
 
 /**
+	补充文件信息
+ */
+func supplementFileStatus(module *Module) (*Module, error) {
+	reply, _ := soaClient.Call("GET", "192.168.3.21:5984", "/file-system/" + module.Fid,
+		nil, nil)
+	if "not_found" == reply["error"]{
+		return nil, &exceptions.Error{"pack info not found", 404}
+	}
+	delete(reply, "_id")
+	delete(reply, "_rev")
+	module.PackInfo = reply
+	return module, nil
+}
+
+/**
 	发送至远程
 */
 func (this *Module) AppendToRemote() (map[string]interface{}, error) {
+	this, err := supplementFileStatus(this)
+	if nil != err {
+		return nil, err
+	}
 	reply, _ := soaClient.Call("GET", addr, "/_uuids?count=1", nil, nil)
 	id := reply["uuids"].([]interface{})[0]
 	this._id = id.(string)

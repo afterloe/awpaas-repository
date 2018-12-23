@@ -24,6 +24,14 @@ func init() {
 	idleConnTimeout = 90
 }
 
+func ObjectToJson(vol interface{}) string {
+	buf, err := json.Marshal(vol)
+	if nil != err {
+		return ""
+	}
+	return string(buf)
+}
+
 func JsonToObject(chunk string) (map[string]interface{}, error){
 	rep := make(map[string]interface{})
 	err := json.Unmarshal([]byte(chunk), &rep)
@@ -41,7 +49,7 @@ func Encode(params map[string]interface{}) string {
 	return context.Encode()
 }
 
-func Call(method, serviceName, url string, body io.ReadCloser, header map[string]string) (map[string]interface{}, error) {
+func Call(method, serviceName, url string, body io.Reader, header map[string]string) (map[string]interface{}, error) {
 	reqUrl := fmt.Sprintf("http://%s%s", serviceName, url)
 	remote, err := http.NewRequest(method, reqUrl, body)
 	for key, value := range header {

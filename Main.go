@@ -51,6 +51,10 @@ func startUpDaemonService(cfg map[string]interface{}) {
 	多核设置
  */
 func multiServiceCfg(cfg map[string]interface{}) {
+	if nil == cfg {
+		logger.Error("main", "multi cpu config can't find.")
+		return
+	}
 	flg := cfg["enable"]
 	if nil == flg {
 		logger.Info("main", "server not allow to use multi cpu")
@@ -87,5 +91,6 @@ func main() {
 		startDefault()
 		return
 	}
+	multiServiceCfg(serverCfg["multiCore"].(map[string]interface{}))
 	startUpDaemonService(serverCfg["daemon"].(map[string]interface{})) // 守护线程
 }

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"net/url"
+	"strings"
 )
 
 var (
@@ -84,4 +85,18 @@ func GeneratorClient() *http.Client {
 		Timeout: 30 * time.Second,
 	}
 	return client
+}
+
+func GeneratorPostHeader() map[string]string {
+	return map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+}
+
+func GeneratorBody(vol interface{}) io.Reader {
+	buf, err := json.Marshal(vol)
+	if nil != err {
+		return nil
+	}
+	return strings.NewReader(string(buf))
 }

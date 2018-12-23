@@ -14,7 +14,8 @@ import (
 func Execute(route *gin.RouterGroup) {
 	route.POST("/fs/upload", FsUpload)
 	route.GET("/remote/repository", RemoteList)
-	route.GET("/warehouse/list", WarehouseList)
+	route.GET("/warehouse", WarehouseList)
+	route.PUT("/warehouse", WarehouseAppend)
 }
 
 /**

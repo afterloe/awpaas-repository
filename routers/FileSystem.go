@@ -47,7 +47,7 @@ func (this *fsFile) generatorMap() map[string]interface{} {
 	}
 }
 
-func saveToCouchDB(object map[string]interface{}) {
+func saveToCouchDB(object map[string]interface{}) map[string]interface{}{
 	reply, _ := soaClient.Call("GET", "192.168.3.21:5984", "/_uuids?count=1", nil, nil)
 	id := reply["uuids"].([]interface{})[0]
 	object["_id"] = id
@@ -55,11 +55,14 @@ func saveToCouchDB(object map[string]interface{}) {
 		strings.NewReader(soaClient.ObjectToJson(object)), map[string]string{
 			"Content-Type": "application/x-www-form-urlencoded",
 		})
-	fmt.Println(reply)
+	// 如果数据库不存在，则创建
 	if "not_found" == reply["error"]{
 		soaClient.Call("PUT", "192.168.3.21:5984", "/file-system",
 			nil, nil )
+		saveToCouchDB(object)
 	}
+
+	return object
 }
 
 /**
@@ -80,7 +83,7 @@ func FsUpload(context *gin.Context) {
 		size: file.Size,
 		status: true,
 	}
-	saveToCouchDB(fs.generatorMap())
-	//context.SaveUploadedFile(file, fs.generatorSavePath())
-	context.JSON(http.StatusOK, util.Success(fs.generatorMap()))
+	object := saveToCouchDB(fs.generatorMap())
+	context.SaveUploadedFile(file, fs.generatorSavePath())
+	context.JSON(http.StatusOK, util.Success(object))
 }

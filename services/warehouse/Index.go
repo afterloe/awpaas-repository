@@ -10,7 +10,7 @@ import (
 
 var (
 	addr,port  string
-	db string
+	dbName string
 )
 
 func init() {
@@ -18,7 +18,7 @@ func init() {
 	addr = config.GetByTarget(db, "addr").(string)
 	port = config.GetByTarget(db, "port").(string)
 	addr += ":" + port
-	db = "registry"
+	dbName = "registry"
 }
 
 type Module struct {
@@ -72,11 +72,11 @@ func (this *Module) AppendToRemote() (map[string]interface{}, error) {
 	id := reply["uuids"].([]interface{})[0]
 	this._id = id.(string)
 	save:
-	reply, _ = soaClient.Call("PUT", addr, fmt.Sprintf("/%s/%v", addr, id),
+	reply, _ = soaClient.Call("PUT", addr, fmt.Sprintf("/%s/%v", dbName, id),
 		soaClient.GeneratorBody(this), soaClient.GeneratorPostHeader())
 	// 如果数据库不存在，则创建
 	if "not_found" == reply["error"]{
-		soaClient.Call("PUT", addr, db, nil, nil)
+		soaClient.Call("PUT", addr, dbName, nil, nil)
 		goto save
 	}
 	return reply, nil
@@ -91,7 +91,7 @@ func GetList(skip, limit string) []interface{} {
 		"limit": limit,
 		"include_docs": "true",
 	})
-	reply, err := soaClient.Call("GET", addr, fmt.Sprintf("/%s/%s?%s", db, "_all_docs", params), nil, nil)
+	reply, err := soaClient.Call("GET", addr, fmt.Sprintf("/%s/%s?%s", dbName, "_all_docs", params), nil, nil)
 	var list = make([]interface{}, 0)
 	if nil != err {
 		return list
@@ -99,6 +99,7 @@ func GetList(skip, limit string) []interface{} {
 	for _, r := range (reply["rows"].([]interface{})) {
 		doc := (r.(map[string]interface{}))["doc"].(map[string]interface{})
 		delete(doc, "_rev")
+		delete(doc, "PackInfo")
 		list = append(list, doc)
 	}
 	return list

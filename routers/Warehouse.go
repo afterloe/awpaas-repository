@@ -28,7 +28,7 @@ func WarehouseAppend(context *gin.Context) {
 		Version : context.PostForm("version"),
 		Fid: context.PostForm("fid"),
 	}
-	err := module.Check("Name", "fid", "group", "version") // 参数检测
+	err := module.Check("Name", "Fid", "Group", "Version") // 参数检测
 	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Error(err))
 		return

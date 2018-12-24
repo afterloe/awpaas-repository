@@ -91,9 +91,9 @@ func GetList(skip, limit string) []interface{} {
 		"limit": limit,
 		"include_docs": "true",
 	})
-	reply, err := soaClient.Call("GET", addr, fmt.Sprintf("/%s/%s?%s", dbName, "_all_docs", params), nil, nil)
+	reply, _ := soaClient.Call("GET", addr, fmt.Sprintf("/%s/%s?%s", dbName, "_all_docs", params), nil, nil)
 	var list = make([]interface{}, 0)
-	if nil != err {
+	if "not_found" == reply["error"]{
 		return list
 	}
 	for _, r := range (reply["rows"].([]interface{})) {

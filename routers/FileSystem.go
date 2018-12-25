@@ -7,16 +7,18 @@ import (
 	"../integrate/soaClient"
 	"fmt"
 	"time"
-	"strings"
 )
 
 var (
 	root, timeFormat string
+	host, dbName string
 )
 
 func init() {
-	root = "F:/"
+	root = "/tmp/filesystem"
 	timeFormat = "2006-01-02 - 15:04:05"
+	host = "192.168.1.3:5984"
+	dbName = "file-system"
 }
 
 type fsFile struct {
@@ -48,18 +50,18 @@ func (this *fsFile) generatorMap() map[string]interface{} {
 }
 
 func saveToCouchDB(object map[string]interface{}) map[string]interface{}{
-	reply, _ := soaClient.Call("GET", "192.168.3.21:5984", "/_uuids?count=1", nil, nil)
+	reply, _ := soaClient.Call("GET", host, "/_uuids?count=1", nil, nil)
 	id := reply["uuids"].([]interface{})[0]
 	object["_id"] = id
-	reply, _ = soaClient.Call("PUT", "192.168.3.21:5984", "/file-system/" + id.(string),
-		strings.NewReader(soaClient.ObjectToJson(object)), map[string]string{
-			"Content-Type": "application/x-www-form-urlencoded",
-		})
+	//save:
+	reply, _ = soaClient.Call("PUT", host, fmt.Sprintf("/%s/%v", dbName, id),
+		soaClient.GeneratorBody(object), soaClient.GeneratorPostHeader())
 	// 如果数据库不存在，则创建
 	if "not_found" == reply["error"]{
-		soaClient.Call("PUT", "192.168.3.21:5984", "/file-system",
-			nil, nil )
-		saveToCouchDB(object)
+		reply, _ := soaClient.Call("PUT", host, "/file-system",
+			nil, nil)
+		fmt.Println(reply)
+		//goto save
 	}
 
 	return object

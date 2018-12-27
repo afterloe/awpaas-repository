@@ -2,6 +2,7 @@ package warehouse
 
 import (
 	"../../integrate/soaClient"
+	"../../integrate/couchdb"
 	"../../config"
 	"../../exceptions"
 	"fmt"
@@ -86,12 +87,11 @@ func (this *Module) AppendToRemote() (map[string]interface{}, error) {
 	获取包列表
 */
 func GetList(skip, limit string) []interface{} {
-	params := soaClient.Encode(map[string]interface{}{
+	reply, _ :=couchdb.Get(dbName + "/_all_docs", map[string]interface{}{
 		"skip": skip,
 		"limit": limit,
 		"include_docs": "true",
 	})
-	reply, _ := soaClient.Call("GET", addr, fmt.Sprintf("/%s/%s?%s", dbName, "_all_docs", params), nil, nil)
 	var list = make([]interface{}, 0)
 	if "not_found" == reply["error"]{
 		return list

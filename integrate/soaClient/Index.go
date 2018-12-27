@@ -25,14 +25,6 @@ func init() {
 	idleConnTimeout = 90
 }
 
-func ObjectToJson(vol interface{}) string {
-	buf, err := json.Marshal(vol)
-	if nil != err {
-		return ""
-	}
-	return string(buf)
-}
-
 func JsonToObject(chunk string) (map[string]interface{}, error){
 	rep := make(map[string]interface{})
 	err := json.Unmarshal([]byte(chunk), &rep)
@@ -50,6 +42,31 @@ func Encode(params map[string]interface{}) string {
 	return context.Encode()
 }
 
+func Invoke(remote *http.Request, module string, callback func(response *http.Response) (map[string]interface{}, error)) (map[string]interface{}, error) {
+	response, err := GeneratorClient().Do(remote)
+	if err != nil && response == nil {
+		logger.Error(module, fmt.Sprintf("forward %+v", err))
+		return nil, err
+	} else {
+		defer response.Body.Close()
+		logger.Logger(module, fmt.Sprintf("%3d | %-7s | %s", response.StatusCode, remote.Method,
+			remote.URL))
+		if nil == callback {
+			return defaultFunc(response)
+		} else {
+			return callback(response)
+		}
+	}
+}
+
+func defaultFunc(response *http.Response) (map[string]interface{}, error) {
+	reply, err := ioutil.ReadAll(response.Body)
+	if nil != err {
+		return nil, err
+	}
+	return JsonToObject(string(reply))
+}
+
 func Call(method, serviceName, url string, body io.Reader, header map[string]string) (map[string]interface{}, error) {
 	reqUrl := fmt.Sprintf("http://%s%s", serviceName, url)
 	remote, err := http.NewRequest(method, reqUrl, body)
@@ -57,20 +74,9 @@ func Call(method, serviceName, url string, body io.Reader, header map[string]str
 		remote.Header.Add(key, value)
 	}
 	if nil != err {
-	}
-	response, err := GeneratorClient().Do(remote)
-	if err != nil && response == nil {
-		logger.Error("soa-client", fmt.Sprintf("forward %+v", err))
 		return nil, err
-	} else {
-		defer response.Body.Close()
-		logger.Logger("soa-client", fmt.Sprintf("%3d | %-7s | %s", response.StatusCode, method, reqUrl))
-		reply, err := ioutil.ReadAll(response.Body)
-		if nil != err {
-			return nil, err
-		}
-		return JsonToObject(string(reply))
 	}
+	return Invoke(remote, "soa-client", defaultFunc)
 }
 
 func GeneratorClient() *http.Client {

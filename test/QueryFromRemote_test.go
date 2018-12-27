@@ -17,7 +17,30 @@ func init() {
 	password = "ascs.tech"
 }
 
-func Test_QueryToCouchDB(t *testing.T) {
+func Test_CouchDBLogin(t *testing.T) {
+	//content := soaClient.Encode(map[string]interface{}{
+	//	"name": "ascs",
+	//	"password": "ascs.tech",
+	//})
+	//t.Log(content)
+	//reply, err := soaClient.Call("POST",  host, "/_session", strings.NewReader(content), soaClient.GeneratorPostHeader())
+	//if nil != err {
+	//	t.Error(err)
+	//}
+	//t.Log(reply)
+	reply, err := soaClient.Call("GET", host, "/_session", nil, nil)
+	if nil != err {
+		t.Error(err)
+	}
+	t.Log(reply)
+	reply, err = soaClient.Call("GET", host, "/_session", nil, nil)
+	if nil != err {
+		t.Error(err)
+	}
+	t.Log(reply)
+}
+
+func test_QueryToCouchDB(t *testing.T) {
 	reply, err := soaClient.Call("GET",  host, "/hyoertable/_all_docs?include_docs=true&limit=10&skip=0", nil, nil)
 	if nil != err {
 		t.Error(err)

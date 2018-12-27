@@ -2,17 +2,47 @@ package test
 
 import (
 	"testing"
-	"../integrate/soaClient"
-	"fmt"
+	"../integrate/couchdb"
 )
 
 func Test_HttpClient_demo(t *testing.T) {
-	reply, err := soaClient.Call("GET",  "192.168.3.21:180", "/v2/_catalog", nil, nil)
+	reply, err := couchdb.Read("demoi/_all_docs?include_docs=true", nil)
 	if nil != err {
-		t.Error(err)
+		t.Error(reply)
 	}
 	t.Log(reply)
-	for k, v := range  reply {
-		t.Log(fmt.Sprintf("key is %s -> value is %s", k, v))
-	}
 }
+
+//func Test_HttpClient_demo(t *testing.T) {
+//	reply, err := couchdb.Create("demoi", map[string]interface{}{
+//		"name": "afterloe",
+//		"age": 6,
+//		"sex": "小男孩",
+//	})
+//	if nil != err {
+//		t.Error(reply)
+//	}
+//	t.Log(reply)
+//}
+
+//func Test_HttpClient_demo(t *testing.T) {
+//	reply, err := couchdb.CreateDB("demo")
+//	if nil != err {
+//		t.Error(reply)
+//	}
+//	t.Log(reply)
+//}
+
+//func Test_HttpClient_demo(t *testing.T) {
+//	flag, err := couchdb.Login()
+//	if nil != err {
+//		t.Error(err)
+//		return
+//	}
+//	t.Log(flag)
+//	reply, err := couchdb.Read("_session", nil)
+//	if nil != err {
+//		t.Error(reply)
+//	}
+//	t.Log(reply)
+//}

@@ -26,7 +26,7 @@ func init() {
 	password = config.GetByTarget(db, "password").(string)
 }
 
-func Get(dbName string, params map[string]interface{}) (map[string]interface{}, error) {
+func Read(dbName string, params map[string]interface{}) (map[string]interface{}, error) {
 	reqUrl := fmt.Sprintf("http://%s/%s?%s", host, dbName, soaClient.Encode(params))
 	remote, err := http.NewRequest("GET", reqUrl, nil)
 	remote.AddCookie(&http.Cookie{Name: key, Value:value, HttpOnly: true})
@@ -34,6 +34,25 @@ func Get(dbName string, params map[string]interface{}) (map[string]interface{}, 
 		return nil, err
 	}
 	return soaClient.Invoke(remote, "couchDB-sdk", nil)
+}
+
+func Create(dbName string, vol interface{}) (map[string]interface{}, error) {
+	reply, _ := soaClient.Call("GET", host, "/_uuids?count=1", nil, nil)
+	id := reply["uuids"].([]interface{})[0]
+	reqUrl := fmt.Sprintf("http://%s/%s/%v", host, dbName, id)
+	createDB:
+	remote, err := http.NewRequest("PUT", reqUrl, soaClient.GeneratorBody(vol))
+	remote.AddCookie(&http.Cookie{Name: key, Value:value, HttpOnly: true})
+	remote.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	if nil != err {
+		return nil, err
+	}
+	reply, err = soaClient.Invoke(remote, "couchDB-sdk", nil)
+	if "not_found" == reply["error"]{
+		soaClient.Call("PUT", host, dbName, nil, nil)
+		goto createDB
+	}
+	return reply, nil
 }
 
 func Login() (bool, error) {

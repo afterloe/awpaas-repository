@@ -5,7 +5,6 @@ import (
 	"../../integrate/couchdb"
 	"../../config"
 	"../../exceptions"
-	"fmt"
 	"reflect"
 )
 
@@ -24,7 +23,6 @@ func init() {
 
 type Module struct {
 	Name, Group, Remarks, Version, Fid string
-	_id string
 	PackInfo map[string]interface{}
 }
 
@@ -69,17 +67,7 @@ func (this *Module) AppendToRemote() (map[string]interface{}, error) {
 	if nil != err {
 		return nil, err
 	}
-	reply, _ := soaClient.Call("GET", addr, "/_uuids?count=1", nil, nil)
-	id := reply["uuids"].([]interface{})[0]
-	this._id = id.(string)
-	save:
-	reply, _ = soaClient.Call("PUT", addr, fmt.Sprintf("/%s/%v", dbName, id),
-		soaClient.GeneratorBody(this), soaClient.GeneratorPostHeader())
-	// 如果数据库不存在，则创建
-	if "not_found" == reply["error"]{
-		soaClient.Call("PUT", addr, dbName, nil, nil)
-		goto save
-	}
+	reply, nil := couchdb.Create(dbName, this)
 	return reply, nil
 }
 
@@ -87,7 +75,7 @@ func (this *Module) AppendToRemote() (map[string]interface{}, error) {
 	获取包列表
 */
 func GetList(skip, limit string) []interface{} {
-	reply, _ :=couchdb.Get(dbName + "/_all_docs", map[string]interface{}{
+	reply, _ :=couchdb.Read(dbName + "/_all_docs", map[string]interface{}{
 		"skip": skip,
 		"limit": limit,
 		"include_docs": "true",

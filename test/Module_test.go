@@ -33,6 +33,7 @@ func Test_CheckModule(t *testing.T) {
 		Remarks: "remarks",
 		Version : "version",
 		Fid: "fid",
+		_id: "12",
 	}
 	buf, err := json.Marshal(module)
 	if nil != err {

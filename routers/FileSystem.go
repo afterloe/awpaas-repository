@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"../util"
 	"../integrate/soaClient"
+	"../exceptions"
 	"fmt"
 	"time"
 )
@@ -17,7 +18,7 @@ var (
 func init() {
 	root = "/tmp/filesystem"
 	timeFormat = "2006-01-02 - 15:04:05"
-	host = "192.168.1.3:5984"
+	host = "mine:5984"
 	dbName = "file-system"
 }
 
@@ -49,22 +50,24 @@ func (this *fsFile) generatorMap() map[string]interface{} {
 	}
 }
 
-func saveToCouchDB(object map[string]interface{}) map[string]interface{}{
+func saveToCouchDB(object map[string]interface{}) (map[string]interface{}, error){
 	reply, _ := soaClient.Call("GET", host, "/_uuids?count=1", nil, nil)
 	id := reply["uuids"].([]interface{})[0]
 	object["_id"] = id
-	//save:
+	save:
 	reply, _ = soaClient.Call("PUT", host, fmt.Sprintf("/%s/%v", dbName, id),
 		soaClient.GeneratorBody(object), soaClient.GeneratorPostHeader())
 	// 如果数据库不存在，则创建
 	if "not_found" == reply["error"]{
 		reply, _ := soaClient.Call("PUT", host, "/file-system",
 			nil, nil)
-		fmt.Println(reply)
-		//goto save
+		if nil != reply["error"] {
+			return nil, &exceptions.Error{"can't create database", 500}
+		}
+		goto save
 	}
 
-	return object
+	return object, nil
 }
 
 /**
@@ -85,7 +88,15 @@ func FsUpload(context *gin.Context) {
 		size: file.Size,
 		status: true,
 	}
-	object := saveToCouchDB(fs.generatorMap())
-	context.SaveUploadedFile(file, fs.generatorSavePath())
+	object, err := saveToCouchDB(fs.generatorMap())
+	if nil != err {
+		context.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	err = context.SaveUploadedFile(file, fs.generatorSavePath())
+	if nil != err {
+		context.JSON(http.StatusInternalServerError, util.Fail(500, "io exception."))
+		return
+	}
 	context.JSON(http.StatusOK, util.Success(object))
 }

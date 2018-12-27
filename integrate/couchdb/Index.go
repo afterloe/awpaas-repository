@@ -26,14 +26,37 @@ func init() {
 	password = config.GetByTarget(db, "password").(string)
 }
 
+func autoCfg(response *http.Response) (map[string]interface{}, error) {
+	reply, _ := ioutil.ReadAll(response.Body)
+	r, _ := soaClient.JsonToObject(string(reply))
+	if 401 == response.StatusCode {
+		return map[string]interface{}{"needLogin": true}, nil
+	}
+	return r, nil
+}
+
 func Read(dbName string, params map[string]interface{}) (map[string]interface{}, error) {
-	reqUrl := fmt.Sprintf("http://%s/%s?%s", host, dbName, soaClient.Encode(params))
+	var reqUrl string
+	if nil != params {
+		reqUrl = fmt.Sprintf("http://%s/%s?%s", host, dbName, soaClient.Encode(params))
+	} else {
+		reqUrl = fmt.Sprintf("http://%s/%s", host, dbName)
+	}
+	reTry:
 	remote, err := http.NewRequest("GET", reqUrl, nil)
 	remote.AddCookie(&http.Cookie{Name: key, Value:value, HttpOnly: true})
 	if nil != err {
 		return nil, err
 	}
-	return soaClient.Invoke(remote, "couchDB-sdk", nil)
+	reply, err := soaClient.Invoke(remote, "couchDB-sdk", autoCfg)
+	if nil != err {
+		return nil, err
+	}
+	if nil != reply["needLogin"] {
+		Login()
+		goto reTry
+	}
+	return reply, nil
 }
 
 func CreateDB(dbName string) (bool, error) {

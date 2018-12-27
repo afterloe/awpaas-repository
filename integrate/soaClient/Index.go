@@ -25,14 +25,6 @@ func init() {
 	idleConnTimeout = 90
 }
 
-func ObjectToJson(vol interface{}) string {
-	buf, err := json.Marshal(vol)
-	if nil != err {
-		return ""
-	}
-	return string(buf)
-}
-
 func JsonToObject(chunk string) (map[string]interface{}, error){
 	rep := make(map[string]interface{})
 	err := json.Unmarshal([]byte(chunk), &rep)
@@ -57,6 +49,7 @@ func Call(method, serviceName, url string, body io.Reader, header map[string]str
 		remote.Header.Add(key, value)
 	}
 	if nil != err {
+		return nil, err
 	}
 	response, err := GeneratorClient().Do(remote)
 	if err != nil && response == nil {

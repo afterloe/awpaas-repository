@@ -2,17 +2,15 @@ package test
 
 import (
 	"testing"
-	"../integrate/soaClient"
-	"fmt"
+	"../integrate/couchdb"
 )
 
 func Test_HttpClient_demo(t *testing.T) {
-	reply, err := soaClient.Call("GET",  "192.168.3.21:180", "/v2/_catalog", nil, nil)
+	flag, err := couchdb.Login()
 	if nil != err {
 		t.Error(err)
+		return
 	}
-	t.Log(reply)
-	for k, v := range  reply {
-		t.Log(fmt.Sprintf("key is %s -> value is %s", k, v))
-	}
+	t.Log(flag)
+	couchdb.UserInfo()
 }

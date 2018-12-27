@@ -67,8 +67,7 @@ func (this *Module) AppendToRemote() (map[string]interface{}, error) {
 	if nil != err {
 		return nil, err
 	}
-	reply, nil := couchdb.Create(dbName, this)
-	return reply, nil
+	return couchdb.Create(dbName, this)
 }
 
 /**

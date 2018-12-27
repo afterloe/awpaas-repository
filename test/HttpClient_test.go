@@ -6,15 +6,29 @@ import (
 )
 
 func Test_HttpClient_demo(t *testing.T) {
-	flag, err := couchdb.Login()
-	if nil != err {
-		t.Error(err)
-		return
-	}
-	t.Log(flag)
-	reply, err := couchdb.Read("_session", nil)
+	//flag, err := couchdb.Login()
+	//if nil != err {
+	//	t.Error(err)
+	//	return
+	//}
+	//t.Log(flag)
+	reply, err := couchdb.CreateDB("demo")
 	if nil != err {
 		t.Error(reply)
 	}
 	t.Log(reply)
 }
+
+//func Test_HttpClient_demo(t *testing.T) {
+//	flag, err := couchdb.Login()
+//	if nil != err {
+//		t.Error(err)
+//		return
+//	}
+//	t.Log(flag)
+//	reply, err := couchdb.Read("_session", nil)
+//	if nil != err {
+//		t.Error(reply)
+//	}
+//	t.Log(reply)
+//}

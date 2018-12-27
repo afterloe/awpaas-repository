@@ -7,6 +7,7 @@ import (
 	"strings"
 	"fmt"
 	"net/http"
+	"../../exceptions"
 	"io/ioutil"
 )
 
@@ -25,26 +26,14 @@ func init() {
 	password = config.GetByTarget(db, "password").(string)
 }
 
-func UserInfo() {
-	reqUrl := fmt.Sprintf("http://%s%s", host, "/_session")
+func Get(dbName string, params map[string]interface{}) (map[string]interface{}, error) {
+	reqUrl := fmt.Sprintf("http://%s/%s?%s", host, dbName, soaClient.Encode(params))
 	remote, err := http.NewRequest("GET", reqUrl, nil)
 	remote.AddCookie(&http.Cookie{Name: key, Value:value, HttpOnly: true})
 	if nil != err {
-		return
+		return nil, err
 	}
-	response, err := soaClient.GeneratorClient().Do(remote)
-	if err != nil && response == nil {
-		logger.Error("couchDB-sdk", fmt.Sprintf("forward %+v", err))
-		return
-	} else {
-		defer response.Body.Close()
-		logger.Logger("couchDB-sdk", fmt.Sprintf("%3d | %-7s | %s", response.StatusCode, "POST", reqUrl))
-		reply, err := ioutil.ReadAll(response.Body)
-		if nil != err {
-			return
-		}
-		logger.Logger("couchDB-sdk", string(reply))
-	}
+	return soaClient.Invoke(remote, "couchDB-sdk", nil)
 }
 
 func Login() (bool, error) {
@@ -58,12 +47,7 @@ func Login() (bool, error) {
 	if nil != err {
 		return false, err
 	}
-	response, err := soaClient.GeneratorClient().Do(remote)
-	if err != nil && response == nil {
-		logger.Error("couchDB-sdk", fmt.Sprintf("forward %+v", err))
-		return false, err
-	} else {
-		defer response.Body.Close()
+	reply, err := soaClient.Invoke(remote, "couchDB-sdk", func(response *http.Response) (map[string]interface{}, error){
 		if 200 == response.StatusCode {
 			content := response.Header.Get("Set-Cookie")
 			item := strings.Split(content, "; ")
@@ -71,12 +55,16 @@ func Login() (bool, error) {
 			key = cookieInfo[0]
 			value = cookieInfo[1]
 		}
-		logger.Logger("couchDB-sdk", fmt.Sprintf("%3d | %-7s | %s", response.StatusCode, "POST", reqUrl))
 		reply, err := ioutil.ReadAll(response.Body)
 		if nil != err {
-			return false, err
+			return map[string]interface{}{}, err
 		}
 		logger.Logger("couchDB-sdk", string(reply))
+		return soaClient.JsonToObject(string(reply))
+	})
+	if nil != reply["error"] {
+		return false, &exceptions.Error{Msg: reply["reason"].(string), Code: 400}
+	} else {
 		return true, nil
 	}
 }

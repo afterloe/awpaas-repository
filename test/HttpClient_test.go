@@ -12,5 +12,9 @@ func Test_HttpClient_demo(t *testing.T) {
 		return
 	}
 	t.Log(flag)
-	couchdb.UserInfo()
+	reply, err := couchdb.Get("_session", nil)
+	if nil != err {
+		t.Error(reply)
+	}
+	t.Log(reply)
 }

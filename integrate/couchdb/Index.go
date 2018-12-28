@@ -24,6 +24,24 @@ func init() {
 	host = addr + ":" + port
 	username = config.GetByTarget(db, "username").(string)
 	password = config.GetByTarget(db, "password").(string)
+	ping()
+}
+
+func ping() {
+	reqUrl := fmt.Sprintf("http://%s", host)
+	remote, err := http.NewRequest("GET", reqUrl, nil)
+	if nil != err {
+		logger.Error(err)
+		return
+	}
+	soaClient.Invoke(remote, "couchDB-sdk", func(response *http.Response) (map[string]interface{}, error) {
+		reply, err := ioutil.ReadAll(response.Body)
+		if nil != err {
+			return nil, nil
+		}
+		logger.Logger("couchDB-sdk", string(reply))
+		return nil, nil
+	})
 }
 
 func autoCfg(response *http.Response) (map[string]interface{}, error) {
@@ -87,9 +105,22 @@ func CreateDB(dbName string) (bool, error) {
 	return false, err
 }
 
-func Create(dbName string, vol interface{}) (map[string]interface{}, error) {
-	reply, _ := soaClient.Call("GET", host, "/_uuids?count=1", nil, nil)
+func getUUID(count int) (interface{}, error){
+	reqUrl := fmt.Sprintf("http://%s/_uuids?count=%d", host, count)
+	remote, err := http.NewRequest("GET", reqUrl, nil)
+	if nil != err {
+		return nil, err
+	}
+	reply, err := soaClient.Invoke(remote, "couchDB-sdk", nil)
+	if nil != err {
+		return nil, err
+	}
 	id := reply["uuids"].([]interface{})[0]
+	return id,nil
+}
+
+func Create(dbName string, vol interface{}) (map[string]interface{}, error) {
+	id, _ := getUUID(1)
 	reqUrl := fmt.Sprintf("http://%s/%s/%v", host, dbName, id)
 	reTry:
 	remote, err := http.NewRequest("PUT", reqUrl, soaClient.GeneratorBody(vol))
@@ -98,7 +129,7 @@ func Create(dbName string, vol interface{}) (map[string]interface{}, error) {
 	if nil != err {
 		return nil, err
 	}
-	reply, err = soaClient.Invoke(remote, "couchDB-sdk", nil)
+	reply, err := soaClient.Invoke(remote, "couchDB-sdk", nil)
 	if "not_found" == reply["error"]{
 		CreateDB(dbName)
 		goto reTry

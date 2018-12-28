@@ -4,8 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"../util"
-	"../integrate/soaClient"
-	"../exceptions"
+	"../integrate/couchdb"
 	"fmt"
 	"time"
 )
@@ -51,23 +50,7 @@ func (this *fsFile) generatorMap() map[string]interface{} {
 }
 
 func saveToCouchDB(object map[string]interface{}) (map[string]interface{}, error){
-	reply, _ := soaClient.Call("GET", host, "/_uuids?count=1", nil, nil)
-	id := reply["uuids"].([]interface{})[0]
-	object["_id"] = id
-	save:
-	reply, _ = soaClient.Call("PUT", host, fmt.Sprintf("/%s/%v", dbName, id),
-		soaClient.GeneratorBody(object), soaClient.GeneratorPostHeader())
-	// 如果数据库不存在，则创建
-	if "not_found" == reply["error"]{
-		reply, _ := soaClient.Call("PUT", host, "/file-system",
-			nil, nil)
-		if nil != reply["error"] {
-			return nil, &exceptions.Error{"can't create database", 500}
-		}
-		goto save
-	}
-
-	return object, nil
+	return couchdb.Create(dbName, object)
 }
 
 /**

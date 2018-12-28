@@ -1,7 +1,6 @@
 package warehouse
 
 import (
-	"../../integrate/soaClient"
 	"../../integrate/couchdb"
 	"../../config"
 	"../../exceptions"
@@ -48,8 +47,7 @@ func (this *Module) Check(args ...string) error {
 	补充文件信息
  */
 func supplementFileStatus(module *Module) (*Module, error) {
-	reply, _ := soaClient.Call("GET", "192.168.3.21:5984", "/file-system/" + module.Fid,
-		nil, nil)
+	reply, _ := couchdb.Read("file-system/" + module.Fid, nil)
 	if "not_found" == reply["error"]{
 		return nil, &exceptions.Error{"pack info not found", 404}
 	}

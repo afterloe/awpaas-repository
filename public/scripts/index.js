@@ -8,7 +8,7 @@ const systemMenu = [{
 }, {
     name: "镜像仓库",
     icon: "images/layers.svg",
-    index: "whiteManager"
+    index: "warehouse"
 }, {
     name: "远程仓库",
     icon: "images/cloud.svg",
@@ -29,7 +29,7 @@ class Main extends React.Component {
         super(props);
         const {menu = []}= props;
         // TODO
-        this.state = {menu, active: "main"};
+        this.state = {menu, active: "warehouse"};
         this.clickItem = this.clickItem.bind(this);
     }
 
@@ -52,8 +52,8 @@ class Main extends React.Component {
         switch (active) {
             case "main":
                 return <TotalMain />;
-            case "whiteManager":
-                return <WhiteManager />;
+            case "warehouse":
+                return <Warehouse />;
             case "serviceRegistry":
                 return <ServiceRegistry />;
             case "activeUsers":

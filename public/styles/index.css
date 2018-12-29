@@ -14,13 +14,14 @@ svg.feather.feather-file { color: #999; }
 .chartjs-size-monitor-shrink div { position:absolute;width:200%;height:200%;left:0; top:0 }
 .chartjs-render-monitor { display: block; width: 1053px; height: 444px; }
 
-/* 白名单 */
+/* 镜像仓库 */
 .cont-btn { margin-left: 10px; }
 .cont-btn:hover { cursor: pointer; color: #007bff }
 .cont-btn embed { margin-right: 4px; color: #999; width: 16px; height: 16px; vertical-align: text-bottom; }
 .cont-btn embed:hover {cursor: pointer; }
 .modal-body .label { margin-bottom: 10px; }
 .alert { position: absolute; right: 20px; }
+.media.text-muted.pt-3.item:hover { background-color: #007bff1c; border-radius: 5px; }
 
 /* 模态窗 */
 .modal.fade.show { display: block; padding-right: 17px; background-color: #00000059 }
@@ -32,23 +33,7 @@ svg.feather.feather-file { color: #999; }
 .modal-footer .btn-primary {background-color: #1a73e8; color: #ffffff;}
 .modal-body .row-container { margin-bottom: 20px; }
 .input-container .input.isActive { border-bottom: 2px solid #1a73e8; }
-.input-container .input {    
-    border-radius: 5px;
-    background-color: #f1f3f4;
-    border: none;
-    box-sizing: border-box;
-    color: var(--cr-input-color, var(--google-grey-900));
-    font-size: inherit;
-    line-height: inherit;
-    outline: none;
-    text-align: inherit;
-    text-overflow: ellipsis;
-    width: 100%;
-    padding-bottom: var(--cr-input-padding-bottom, 6px);
-    padding-inline-end: var(--cr-input-padding-end, 8px);
-    padding-inline-start: var(--cr-input-padding-start, 8px);
-    padding-top: var(--cr-input-padding-top, 6px);
-}
+.input-container .input { border-radius: 5px; background-color: #f1f3f4; border: none; box-sizing: border-box; color: var(--cr-input-color, var(--google-grey-900)); font-size: inherit; line-height: inherit; outline: none; text-align: inherit; text-overflow: ellipsis; width: 100%; padding-bottom: var(--cr-input-padding-bottom, 6px); padding-inline-end: var(--cr-input-padding-end, 8px); padding-inline-start: var(--cr-input-padding-start, 8px); padding-top: var(--cr-input-padding-top, 6px);}
 
 /* 服务注册列表 */
 .btn-outline-secondary.cont-btn:hover { background-color: #ffffff; }

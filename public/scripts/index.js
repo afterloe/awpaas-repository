@@ -79,5 +79,4 @@ Main.defaultProps = {
     links: []
 };
 
-ReactDOM.render(<Header name="镜像管理" version="v1.0.0"/>, document.getElementById("head"));
 ReactDOM.render(<Main menu={systemMenu} links={linkMenu}/>, document.getElementById("app"));

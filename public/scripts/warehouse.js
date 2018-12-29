@@ -19,6 +19,7 @@ class Warehouse extends React.Component {
         this.modifyToRemote = this.modifyToRemote.bind(this);
         this.deleteItem = this.deleteItem.bind(this);
         this.deleteToRemote = this.deleteToRemote.bind(this);
+        this.detail = this.detail.bind(this);
         this.state = {};
     }
 
@@ -103,13 +104,17 @@ class Warehouse extends React.Component {
         ReactDOM.render(<ModalWindow_alert title={"删除此项"} context={context} value={content} callback={this.deleteToRemote}/>, document.getElementById("modal"));
     }
 
+    detail(event) {
+        window.location.href="detail.html";
+    }
+
     editItem(event) {
         const content = event.currentTarget.parentNode.previousSibling.textContent;
         ReactDOM.render(<ModalWindow title={"修改记录"} itemName={"白名单"} value={content} callback={this.modifyToRemote}/>, document.getElementById("modal"));
     }
 
     appendItem() {
-        ReactDOM.render(<ModalWindow title={"添加记录"} itemName={"白名单"} callback={this.appendItemToRemote} />, document.getElementById("modal"));
+        window.location.href="appendNew.html";
     }
 
     renderMsgAlert(msg) {
@@ -184,7 +189,7 @@ class Warehouse extends React.Component {
                             <div className="d-flex justify-content-between align-items-center w-100">
                                 <strong className="text-gray-dark">"ss</strong>
                                 <span>
-                                    <span className="cont-btn" onClick={this.editItem}>
+                                    <span className="cont-btn" onClick={this.detail}>
                                         <embed src="images/edit.svg" width="16" height="16" type="image/svg+xml"/>
                                         <span>详情</span>
                                     </span>

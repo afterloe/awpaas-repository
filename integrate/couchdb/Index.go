@@ -53,6 +53,31 @@ func autoCfg(response *http.Response) (map[string]interface{}, error) {
 	return r, nil
 }
 
+func Find(dbName string, conditions []condition, fields []string) (map[string]interface{}, error) {
+	reqUrl := fmt.Sprintf("http://%s/%s", host, dbName)
+	reTry:
+	remote, err := http.NewRequest("POST", reqUrl, nil)
+	remote.AddCookie(&http.Cookie{Name: key, Value:value, HttpOnly: true})
+	remote.Header.Add("Content-Type", "application/json")
+	if nil != err {
+		return nil, err
+	}
+	reply, err := soaClient.Invoke(remote, "couchDB-sdk", func(response *http.Response) (map[string]interface{}, error) {
+		reply, _ := ioutil.ReadAll(response.Body)
+		r, _ := soaClient.JsonToObject(string(reply))
+		if 200 == response.StatusCode {
+			return nil, nil
+		} else {
+			return nil, &exceptions.Error{Code: response.StatusCode, Msg: r["reason"].(string)}
+		}
+	})
+	if 401 == (err).(*exceptions.Error).Code {
+		Login()
+		goto reTry
+	}
+	return reply, err
+}
+
 func Read(dbName string, params map[string]interface{}) (map[string]interface{}, error) {
 	var reqUrl string
 	if nil != params {

@@ -6,12 +6,21 @@ import (
 )
 
 func Test_HttpClient_demo(t *testing.T) {
-	reply, err := couchdb.Read("demoi/_all_docs?include_docs=true", nil)
-	if nil != err {
-		t.Error(reply)
-	}
-	t.Log(reply)
+
+	condition := couchdb.Condition().Append("_id", "$eq", "768edfd797eb8200d853b13632000e63").
+		Append("Status", "$eq", true).
+		Fields("Name", "_id", "Size")
+
+	t.Log(condition)
 }
+
+//func Test_HttpClient_demo(t *testing.T) {
+//	reply, err := couchdb.Read("demoi/_all_docs?include_docs=true", nil)
+//	if nil != err {
+//		t.Error(reply)
+//	}
+//	t.Log(reply)
+//}
 
 //func Test_HttpClient_demo(t *testing.T) {
 //	reply, err := couchdb.Create("demoi", map[string]interface{}{

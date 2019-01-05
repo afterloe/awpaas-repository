@@ -190,8 +190,8 @@ class Warehouse extends React.Component {
                                 <strong className="text-gray-dark">"ss</strong>
                                 <span>
                                     <span className="cont-btn" onClick={this.detail}>
-                                        <embed src="images/edit.svg" width="16" height="16" type="image/svg+xml"/>
-                                        <span>详情</span>
+                                        <embed src="images/repeat.svg" width="16" height="16" type="image/svg+xml"/>
+                                        <span>更新</span>
                                     </span>
                                     <span className="cont-btn" onClick={this.editItem}>
                                         <embed src="images/edit.svg" width="16" height="16" type="image/svg+xml"/>

@@ -12,7 +12,7 @@ func (this *condition) String() string {
 }
 
 func Condition() *condition {
-	return &condition{"selector": condition{}, "fields": "", "limit": 10, "skip": 0}
+	return &condition{"selector": condition{},"limit": 10, "skip": 0}
 }
 
 func (this *condition) Append(key string, args ...interface{}) *condition {

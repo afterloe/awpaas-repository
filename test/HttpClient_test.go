@@ -8,10 +8,12 @@ import (
 func Test_HttpClient_demo(t *testing.T) {
 
 	condition := couchdb.Condition().Append("_id", "$eq", "768edfd797eb8200d853b13632000e63").
-		Append("Status", "$eq", true).
-		Fields("Name", "_id", "Size")
+		Append("Status", "$eq", true)
+		//Fields("Name", "_id", "Size")
 
-	t.Log(condition)
+	t.Log(condition.String())
+	reply, _ := couchdb.Find("file-system", condition)
+	t.Log(reply)
 }
 
 //func Test_HttpClient_demo(t *testing.T) {

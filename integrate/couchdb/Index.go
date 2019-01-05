@@ -53,7 +53,7 @@ func autoCfg(response *http.Response) (map[string]interface{}, error) {
 	return r, nil
 }
 
-func Find(dbName string, conditions *condition) (map[string]interface{}, error) {
+func Find(dbName string, conditions *condition) ([]interface{}, error) {
 	reqUrl := fmt.Sprintf("http://%s/%s/_find", host, dbName)
 	reTry:
 	remote, err := http.NewRequest("POST", reqUrl, strings.NewReader(conditions.String()))
@@ -75,7 +75,7 @@ func Find(dbName string, conditions *condition) (map[string]interface{}, error) 
 		Login()
 		goto reTry
 	}
-	return reply, err
+	return reply["docs"].([]interface{}), err
 }
 
 func Read(dbName string, params map[string]interface{}) (map[string]interface{}, error) {

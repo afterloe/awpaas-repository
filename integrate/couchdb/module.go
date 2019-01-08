@@ -12,7 +12,7 @@ func (this *condition) String() string {
 }
 
 func Condition() *condition {
-	return &condition{"selector": condition{},"limit": 10, "skip": 0}
+	return &condition{"selector": condition{}, "limit": 10, "skip": 0}
 }
 
 func (this *condition) Append(key string, args ...interface{}) *condition {
@@ -34,4 +34,30 @@ func (this *condition) Page(begin, limit int) *condition {
 	(*this)["skip"] = begin
 	(*this)["limit"] = limit
 	return this
+}
+
+type obj struct {
+	Id string `json:"_id"`
+	Rev string `json:"_rev"`
+	Delete bool `json:"_deleted"`
+}
+
+func GeneratorDelObj(id, rev string) *obj {
+	return &obj{
+		Id: id,
+		Rev: rev,
+		Delete: true,
+	}
+}
+
+type Module struct {
+	Id string `json:"id"`
+	Status bool `json:"status"`
+	ModifyTime int64 `json:"modifyTime"`
+	UploadTime int64 `json:"uploadTime"`
+}
+
+func (this *Module) String() string {
+	jstr, _ := util.FormatToString(*this)
+	return jstr
 }

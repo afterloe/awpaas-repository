@@ -1,13 +1,10 @@
 {
   "custom": {
-    "tokenName": "access-token",
-    "needToken": true,
-    "whiteList": ["/member/login", "/fs/preview"],
-    "authorizedServcieName": "authorize"
+    "fsServiceName": "192.168.3.21:8080"
   },
   "info": {
     "name": "awpaas-repository",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "author": "afterloe[lm6289511@gmai.com]",
     "homePage": "https://github.com/afterloe",
     "remarks": "awpaas 微服务仓库，负责服务镜像的管理，镜像包含了可运行程序和对应的版本号，通过镜像可以启动容器、服务。当程序更新的时，提供最新版本的镜像即可完成更新，当出现错误或问题时，镜像就像快照一样可以快速对服务或容器进行恢复。"

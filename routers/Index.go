@@ -14,7 +14,9 @@ import (
 func Execute(route *gin.RouterGroup) {
 	route.GET("/remote/repository", RemoteList)
 	route.GET("/warehouse", WarehouseList)
+	route.GET("/warehouse/:key", WarehouseOne)
 	route.PUT("/warehouse", WarehouseAppend)
+	route.POST("/warehouse", WarehouseModify)
 }
 
 /**

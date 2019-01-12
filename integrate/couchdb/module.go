@@ -49,15 +49,3 @@ func GeneratorDelObj(id, rev string) *obj {
 		Delete: true,
 	}
 }
-
-type Module struct {
-	Id string `json:"id"`
-	Status bool `json:"status"`
-	ModifyTime int64 `json:"modifyTime"`
-	UploadTime int64 `json:"uploadTime"`
-}
-
-func (this *Module) String() string {
-	jstr, _ := util.FormatToString(*this)
-	return jstr
-}

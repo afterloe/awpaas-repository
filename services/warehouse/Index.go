@@ -53,3 +53,22 @@ func GetList(begin, limit int) []interface{} {
 		Page(begin, limit))
 	return reply
 }
+
+func GetOne(key string, fields ...string) (*warehouse, error) {
+	condition := couchdb.Condition().Append("_id", "$eq", key).
+		Append("status", "$eq", true)
+	if 0 != len(fields) {
+		condition = condition.Fields(fields...)
+	}
+	reply, _ := couchdb.Find(condition)
+	if 0 != len(reply) {
+		var target warehouse
+		item := reply[0].(map[string]interface{})
+		couchdb.Decode(item, &target)
+		target.Id = item["_id"].(string)
+		target.rev = item["_rev"].(string)
+		return &target, nil
+	} else {
+		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
+	}
+}

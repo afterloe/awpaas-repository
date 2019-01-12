@@ -16,6 +16,23 @@ func WarehouseList(context *gin.Context) {
 }
 
 /**
+	查询包详情
+*/
+func WarehouseOne(ctx *gin.Context) {
+	key := ctx.Param("key")
+	if 32 > len(key) {
+		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	reply, err := warehouse.GetOne(key)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, util.Success(*reply))
+}
+
+/**
 	添加包
  */
 func WarehouseAppend(context *gin.Context) {

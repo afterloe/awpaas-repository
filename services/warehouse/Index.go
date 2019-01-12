@@ -54,6 +54,19 @@ func GetList(begin, limit int) []interface{} {
 	return reply
 }
 
+/**
+	更行包信息
+ */
+func Update() (interface{}, error) {
+	// TODO
+	return map[string]interface{}{
+		"flag": true,
+	}, nil
+}
+
+/**
+	查询包详细信息
+*/
 func GetOne(key string, fields ...string) (*warehouse, error) {
 	condition := couchdb.Condition().Append("_id", "$eq", key).
 		Append("status", "$eq", true)

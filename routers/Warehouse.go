@@ -54,3 +54,31 @@ func WarehouseAppend(context *gin.Context) {
 	}
 	context.JSON(http.StatusOK, util.Success(object))
 }
+
+/**
+	修改包信息
+ */
+ func WarehouseModify(ctx *gin.Context) {
+ 	id := ctx.PostForm("id")
+ 	if "" == id {
+		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	 old, err := warehouse.GetOne(id)
+	 if nil != err {
+		 ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		 return
+	 }
+	 w := warehouse.Default()
+	 w.Name = ctx.PostForm("name")
+	 w.Group = ctx.PostForm("group")
+	 w.Remarks = ctx.PostForm("remarks")
+	 w.Version = ctx.PostForm("version")
+	 w.Fid = ctx.PostForm("fid")
+	 reply, err := warehouse.Update(w, old)
+	 if nil != err {
+		 ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		 return
+	 }
+	 ctx.JSON(http.StatusOK, util.Success(reply))
+ }

@@ -49,6 +49,14 @@ func FormatToStruct(chunk *string) (map[string]interface{}, error){
 	return rep, nil
 }
 
+func FormatToMap(jsonStr string) (map[string]interface{}, error) {
+	mapResult := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(jsonStr), &mapResult); err != nil {
+		return nil,  &exceptions.Error{Msg: "json format error", Code: 500}
+	}
+	return mapResult, nil
+}
+
 /**
 	结构体转化为文本
 

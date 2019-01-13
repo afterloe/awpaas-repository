@@ -17,6 +17,7 @@ func Execute(route *gin.RouterGroup) {
 	route.GET("/warehouse/:key", WarehouseOne)
 	route.PUT("/warehouse", WarehouseAppend)
 	route.POST("/warehouse", WarehouseModify)
+	route.DELETE("/warehouse/:key", WarehouseDel)
 }
 
 /**

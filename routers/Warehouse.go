@@ -82,3 +82,26 @@ func WarehouseAppend(context *gin.Context) {
 	 }
 	 ctx.JSON(http.StatusOK, util.Success(reply))
  }
+
+ /**
+ 	删除文件包
+  */
+ func WarehouseDel(ctx *gin.Context) {
+	 key := ctx.Param("key")
+	 if 32 > len(key) {
+		 ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		 return
+	 }
+	 reply, err := warehouse.GetOne(key)
+	 if nil != err {
+		 ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		 return
+	 }
+	 reply.Status = false
+	 _, err = reply.Modify()
+	 if nil != err {
+		 ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		 return
+	 }
+	 ctx.JSON(http.StatusOK, util.Success(reply))
+ }

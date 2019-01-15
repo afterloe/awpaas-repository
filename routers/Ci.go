@@ -47,12 +47,34 @@ func CmdBuilder(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, util.Error(err))
 		return
 	}
-	old, err := warehouse.GetOne(key)
+	w, err := warehouse.GetOne(key)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return
 	}
-	reply, err := warehouse.AppendCI(old, cmd)
+	reply, err := warehouse.AppendCI(w, cmd)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, util.Success(reply))
+}
+
+/**
+	构建 - 执行构建命令
+ */
+func CmdCi(ctx *gin.Context) {
+	key := ctx.Param("key")
+	if 32 > len(key) {
+		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	w, err := warehouse.GetOne(key)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	reply, err := warehouse.Build(w)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return

@@ -146,3 +146,11 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
 }
+
+/**
+	软件构建
+ */
+func Build(w *warehouse) (interface{}, error) {
+
+	return nil, nil
+}

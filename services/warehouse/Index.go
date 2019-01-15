@@ -135,8 +135,12 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 		var target warehouse
 		item := reply[0].(map[string]interface{})
 		couchdb.Decode(item, &target)
-		target.Id = item["_id"].(string)
-		target.rev = item["_rev"].(string)
+		if nil != item["_id"] {
+			target.Id = item["_id"].(string)
+		}
+		if nil != item["_rev"] {
+			target.rev = item["_rev"].(string)
+		}
 		return &target, nil
 	} else {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}

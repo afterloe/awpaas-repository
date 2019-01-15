@@ -21,9 +21,15 @@ type warehouse struct {
 	Cmd cmd `json:"cmd"`
 }
 
+var registryType = [3]string{}
+
 type cmd struct {
-	FileType string `json:"fileType"`
-	content []string `json:"content"`
+	RegistryType string `json:"fileType"`
+	Content []string `json:"content"`
+}
+
+func (this *cmd) String() string {
+	return fmt.Sprintf("{'fileType': '%s', 'content': '%v'}", this.RegistryType, this.Content)
 }
 
 func (this *warehouse) String() string {

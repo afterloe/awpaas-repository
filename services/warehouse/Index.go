@@ -13,6 +13,7 @@ var fsServiceName string
 
 func init() {
 	fsServiceName = config.GetByTarget(config.Get("custom"), "fsServiceName").(string)
+	registryType = [3]string{"code", "image", "tar"}
 }
 
 /**
@@ -50,6 +51,19 @@ func (this *warehouse) Modify() (map[string]interface{}, error) {
 	return couchdb.Update(this.Id, m)
 }
 
+func GetRegistryType() interface{} {
+	return registryType
+}
+
+func DefaultCmd(inputType string, content ...string) (*cmd, error) {
+	for _, t := range registryType {
+		if t == inputType {
+			return &cmd{inputType, content}, nil
+		}
+	}
+	return nil, &exceptions.Error{Msg: "no such this type", Code: 400}
+}
+
 func Default() *warehouse {
 	return &warehouse{
 		Status: true,
@@ -66,6 +80,15 @@ func GetList(begin, limit int) []interface{} {
 		Page(begin, limit))
 	return reply
 }
+
+func AppendCI(w *warehouse, ci *cmd) (interface{}, error) {
+	if nil == ci {
+		return nil, &exceptions.Error{Msg: "cmd not found", Code: 400}
+	}
+	w.Cmd = *ci
+	return w.Modify()
+}
+
 
 /**
 	更行包信息

@@ -25,7 +25,7 @@
     "golang.org/x/net/context": "laster"
   },
   "services": {
-    "warehouse": {
+    "remote": {
       "addr": "192.168.3.21:180"
     },
     "db": {

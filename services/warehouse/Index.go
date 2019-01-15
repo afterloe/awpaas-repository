@@ -13,6 +13,7 @@ var fsServiceName string
 
 func init() {
 	fsServiceName = config.GetByTarget(config.Get("custom"), "fsServiceName").(string)
+	registryType = [3]string{"code", "image", "tar"}
 }
 
 /**
@@ -50,6 +51,19 @@ func (this *warehouse) Modify() (map[string]interface{}, error) {
 	return couchdb.Update(this.Id, m)
 }
 
+func GetRegistryType() interface{} {
+	return registryType
+}
+
+func DefaultCmd(inputType string, content ...string) (*cmd, error) {
+	for _, t := range registryType {
+		if t == inputType {
+			return &cmd{inputType, content}, nil
+		}
+	}
+	return nil, &exceptions.Error{Msg: "no such this type", Code: 400}
+}
+
 func Default() *warehouse {
 	return &warehouse{
 		Status: true,
@@ -66,6 +80,15 @@ func GetList(begin, limit int) []interface{} {
 		Page(begin, limit))
 	return reply
 }
+
+func AppendCI(w *warehouse, ci *cmd) (interface{}, error) {
+	if nil == ci {
+		return nil, &exceptions.Error{Msg: "cmd not found", Code: 400}
+	}
+	w.Cmd = *ci
+	return w.Modify()
+}
+
 
 /**
 	更行包信息
@@ -112,10 +135,22 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 		var target warehouse
 		item := reply[0].(map[string]interface{})
 		couchdb.Decode(item, &target)
-		target.Id = item["_id"].(string)
-		target.rev = item["_rev"].(string)
+		if nil != item["_id"] {
+			target.Id = item["_id"].(string)
+		}
+		if nil != item["_rev"] {
+			target.rev = item["_rev"].(string)
+		}
 		return &target, nil
 	} else {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
+}
+
+/**
+	软件构建
+ */
+func Build(w *warehouse) (interface{}, error) {
+
+	return nil, nil
 }

@@ -10,7 +10,7 @@ var (
 )
 
 func init() {
-	warehouse := config.GetByTarget(config.Get("services"), "warehouse")
+	warehouse := config.GetByTarget(config.Get("services"), "remote")
 	addr = config.GetByTarget(warehouse, "addr").(string)
 	listUrl = "/v2/_catalog"
 }

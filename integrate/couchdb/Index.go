@@ -98,6 +98,9 @@ func Find(conditions *condition) ([]interface{}, error) {
 		Login()
 		goto reTry
 	}
+	if nil == reply["docs"] {
+		return []interface{}{}, err
+	}
 	return reply["docs"].([]interface{}), err
 }
 

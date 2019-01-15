@@ -18,7 +18,12 @@ type warehouse struct {
 	Version string `json:"version"`
 	Fid string `json:"fid"`
 	PackInfo map[string]interface{} `json:"packInfo"`
-	Cmd map[string]interface{} `json:"cmd"`
+	Cmd cmd `json:"cmd"`
+}
+
+type cmd struct {
+	FileType string `json:"fileType"`
+	content []string `json:"content"`
 }
 
 func (this *warehouse) String() string {

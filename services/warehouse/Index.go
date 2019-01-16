@@ -149,8 +149,25 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 
 /**
 	软件构建
+
+	1.查询源文件
+	2.判断ci类型
+	3.按照类型进行分发处理
  */
 func Build(w *warehouse) (interface{}, error) {
-
-	return nil, nil
+	cmd := w.Cmd
+	switch cmd.RegistryType {
+		case "code":
+			reply, _ := soaClient.Call("GET", fsServiceName, "/v1/download/" + w.Fid, nil, nil)
+			if 200 != reply["code"].(float64) {
+				return nil, &exceptions.Error{Msg: "no such this file", Code: 400}
+			}
+			return nil, nil
+		case "image":
+			return nil, nil
+		case "tar":
+			return nil, nil
+		default:
+			return nil, &exceptions.Error{Msg: "can't supper this"}
+	}
 }

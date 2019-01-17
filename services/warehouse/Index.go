@@ -9,7 +9,7 @@ import (
 	"time"
 	"fmt"
 	"os/exec"
-	"bytes"
+	"os"
 )
 
 var fsServiceName string
@@ -150,6 +150,27 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 	}
 }
 
+func execShell(dir string, args ...string) (interface{}, error) {
+	os.Remove(dir + "/cmd.sh")
+	sh, err := os.Create(dir + "/cmd.sh")
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "create file error", Code: 500}
+	}
+	sh.WriteString("#!/bin/bash\n")
+	for _, c := range args {
+		sh.WriteString(c + "\n")
+	}
+	sh.Chmod(os.ModePerm)
+	sh.Close()
+	cmd := exec.Command("/bin/bash", "-c", "./cmd.sh > report.log")
+	cmd.Dir = dir
+	tpl, err := cmd.Output()
+	if nil != err {
+		return nil, &exceptions.Error{Msg: err.Error(), Code: 500}
+	}
+	return string(tpl), nil
+}
+
 /**
 	软件构建
 
@@ -160,28 +181,19 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 func Build(w *warehouse) (interface{}, error) {
 	cmd := w.Cmd
 	switch cmd.RegistryType {
-		case "code":
-			context := "/tmp/download/" + util.GeneratorUUID()
+		case "tar":
+			task := util.GeneratorUUID()
+			context := "/tmp/download/" + task
 			_, err := soaClient.DownloadFile(fmt.Sprintf("http://%s/v1/download/%s", fsServiceName, w.Fid),
 				context)
 			if nil != err {
 				return nil, err
 			}
-			reply := make([]string, 0)
-			for _, c := range cmd.Content {
-				var out bytes.Buffer
-				e := exec.Command(context, c)
-				e.Stdout = &out
-				err := e.Run()
-				if nil != err {
-					return nil, err
-				}
-				reply = append(reply, out.String())
-			}
-			return reply, nil
+			go execShell(context, cmd.Content...)
+			return task, nil
 		case "image":
 			return nil, nil
-		case "tar":
+		case "code":
 			return nil, nil
 		default:
 			return nil, &exceptions.Error{Msg: "can't supper this"}

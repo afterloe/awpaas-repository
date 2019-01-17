@@ -2,26 +2,47 @@ package test
 
 import (
 	"testing"
+	"os"
 	"os/exec"
-	"log"
-	"strings"
 )
 
 func Test_Demo_demo(t *testing.T) {
 	//errorNotFound := errors.New("executable file not found in $PATH")
-	arg := "/Users/afterloe"
-	cmd := exec.Command("ls", arg)
-	log.Println("Running command and waiting for it finish")
+	commandList := [3]string{"ls", "pwd", "tar -xzvf risk-point-0.0.5.tar.gz"}
+	dir := "/tmp/download/F1A0DA6DF9F34FF3B511900BA0FEA1A8"
+	os.Remove(dir + "/cmd.sh")
+	sh, err := os.Create(dir + "/cmd.sh")
+	if nil != err {
+		t.Error(err)
+	}
+	sh.WriteString("#!/bin/bash\n")
+	for _, c := range commandList {
+		sh.WriteString(c + "\n")
+	}
+	sh.Chmod(os.ModePerm)
+	sh.Close()
+	cmd := exec.Command("/bin/bash", "-c", "./cmd.sh > report.log")
+	cmd.Dir = dir
 	tpl, err := cmd.Output()
 	if nil != err {
-		t.Error("exec command ls " + arg + " failed.")
+		t.Error(err)
+		t.Error("exec cmd.sh failed.")
 		return
 	}
-	str := string(tpl)
-	files := strings.Split(str, "\n")
-	log.Println(files)
-	log.Println(len(files))
-	for _, file := range files {
-		log.Printf("item is -> %s", file)
-	}
+	t.Log(tpl)
 }
+
+/*
+
+		cmd.Dir = dir
+		cmd.Env = []string{"$PATH=" + dir}
+		t.Log("Running command and waiting for it finish")
+		tpl, err := cmd.Output()
+		if nil != err {
+			t.Error(err)
+			t.Error("exec command " + c + " failed.")
+			return
+		}
+		str := string(tpl)
+
+	 */

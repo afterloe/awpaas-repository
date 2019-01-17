@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"../services/warehouse"
-	"../services/fileSystem"
 	"../util"
 )
 
@@ -32,7 +31,7 @@ func WarehouseLoad(ctx *gin.Context) {
 		ctx.SecureJSON(http.StatusBadRequest, util.Fail(400, "file not found."))
 		return
 	}
-	fs := fileSystem.Default(file.Filename, file.Header.Get("Content-Type"), file.Size)
+	fs := warehouse.GeneratorFsFile(file.Filename, file.Header.Get("Content-Type"), file.Size)
 	reply.PackInfo = *fs
 	if nil != err {
 		ctx.SecureJSON(http.StatusInternalServerError, util.Error(err))
@@ -105,7 +104,6 @@ func WarehouseModify(ctx *gin.Context) {
 	w.Group = ctx.PostForm("group")
 	w.Remarks = ctx.PostForm("remarks")
 	w.Version = ctx.PostForm("version")
-	w.Fid = ctx.PostForm("fid")
 	reply, err := warehouse.Update(w, old)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))

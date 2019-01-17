@@ -3,51 +3,31 @@ package warehouse
 import (
 	"../../integrate/couchdb"
 	"../../exceptions"
-	"../../integrate/soaClient"
 	"../../config"
 	"../../util"
 	"time"
 	"fmt"
 	"os/exec"
 	"os"
-	"strings"
 )
 
-var fsServiceName string
+var fsServiceName, root string
 
 func init() {
-	fsServiceName = config.GetByTarget(config.Get("custom"), "fsServiceName").(string)
+	cfg := config.Get("custom")
+	fsServiceName = config.GetByTarget(cfg, "fsServiceName").(string)
+	root = config.GetByTarget(cfg, "root").(string)
 	registryType = [4]string{"code", "image", "tar", "soa-jvm"}
-}
-
-/**
-	补充文件信息
- */
-func supplementFileStatus(w *warehouse) (*warehouse, error) {
-	reply, _ := soaClient.Call("GET", fsServiceName, "/v1/file/" + w.Fid, nil, nil)
-	if 200 != reply["code"].(float64) {
-		return nil, &exceptions.Error{Msg: "no such this file", Code: 400}
-	}
-	w.PackInfo = reply["data"].(map[string]interface{})
-	return w, nil
 }
 
 /**
 	保存至远程
 */
 func (this *warehouse) SaveToDB() (map[string]interface{}, error) {
-	this, err := supplementFileStatus(this)
-	if nil != err {
-		return nil, err
-	}
 	return couchdb.Create(this)
 }
 
 func (this *warehouse) Modify() (map[string]interface{}, error) {
-	this, err := supplementFileStatus(this)
-	if nil != err {
-		return nil, err
-	}
 	this.ModifyTime = time.Now().Unix()
 	jsonStr, _ := util.FormatToString(*this)
 	m, _ := util.FormatToMap(jsonStr)
@@ -147,6 +127,22 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 	}
 }
 
+func GeneratorFsFile(name, contentType string, size int64) *fsFile {
+	return &fsFile{
+		SavePath: root,
+		Key: util.GeneratorUUID(),
+		UploadTime: time.Now().Unix(),
+		Name: name,
+		ContentType: contentType,
+		Size: size,
+		Status: true,
+	}
+}
+
+func (this *fsFile) GeneratorSavePath() string {
+	return fmt.Sprintf("%s/%s", this.SavePath, this.Key)
+}
+
 func execShell(dir string, args ...string) (interface{}, error) {
 	sh, err := os.Create(dir + "/cmd.sh")
 	if nil != err {
@@ -185,8 +181,6 @@ func Build(w *warehouse) (interface{}, error) {
 			task := util.GeneratorUUID()
 			context := "/tmp/download/" + task
 			go func() {
-				soaClient.DownloadFile(fmt.Sprintf("http://%s/v1/download/%s", fsServiceName, w.Fid),
-					context)
 				rep, _ := execShell(context, cmd.Content...)
 				cmd.LastReport = rep.(string)
 				w.Cmd = cmd
@@ -199,12 +193,19 @@ func Build(w *warehouse) (interface{}, error) {
 			return nil, nil
 		case "soa-jvm":
 			task := util.GeneratorUUID()
-			context := "/tmp/download/" + task
+			packageInfo := w.PackInfo
+			context := packageInfo.GeneratorSavePath() + "/" + task
 			go func() {
-				
+				rep, _ :=execShell(context, []string{
+					fmt.Sprintf("cp ../%s ./", packageInfo.Name),
+					fmt.Sprintf("tar -xzvf %s", packageInfo.Name),
+					fmt.Sprintf("docker build -t %s/%s/%s:%s .", "127.0.0.1", w.Group, w.Name, w.Version),
+					fmt.Sprintf("docker push %s/%s/%s:%s", "127.0.0.1", w.Group, w.Name, w.Version),
+				}...)
 				cmd.LastReport = rep.(string)
 				w.Cmd = cmd
 				w.Modify()
+				os.RemoveAll(context)
 			}()
 			return nil, nil
 		default:

@@ -21,7 +21,7 @@ type warehouse struct {
 	Cmd cmd `json:"cmd"`
 }
 
-var registryType = [3]string{}
+var registryType = [4]string{}
 
 type cmd struct {
 	RegistryType string `json:"registryType"`

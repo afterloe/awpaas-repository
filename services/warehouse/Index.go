@@ -10,13 +10,14 @@ import (
 	"fmt"
 	"os/exec"
 	"os"
+	"strings"
 )
 
 var fsServiceName string
 
 func init() {
 	fsServiceName = config.GetByTarget(config.Get("custom"), "fsServiceName").(string)
-	registryType = [3]string{"code", "image", "tar"}
+	registryType = [4]string{"code", "image", "tar", "soa-jvm"}
 }
 
 /**
@@ -199,6 +200,16 @@ func Build(w *warehouse) (interface{}, error) {
 		case "image":
 			return nil, nil
 		case "code":
+			return nil, nil
+		case "soa-jvm":
+			task := util.GeneratorUUID()
+			context := "/tmp/download/" + task
+			go func() {
+				
+				cmd.LastReport = rep.(string)
+				w.Cmd = cmd
+				w.Modify()
+			}()
 			return nil, nil
 		default:
 			return nil, &exceptions.Error{Msg: "can't supper this"}

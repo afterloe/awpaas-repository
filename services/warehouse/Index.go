@@ -155,13 +155,13 @@ func execShell(dir string, args ...string) (interface{}, error) {
 	if nil != err {
 		return nil, &exceptions.Error{Msg: "create file error", Code: 500}
 	}
-	sh.WriteString("#!/bin/bash\n")
+	sh.WriteString("#!/bin/sh\n")
 	for _, c := range args {
 		sh.WriteString(c + "\n")
 	}
 	sh.Chmod(os.ModePerm)
 	sh.Close()
-	cmd := exec.Command("/bin/sh", "./cmd.sh 2>&1 | tee report.log")
+	cmd := exec.Command("/bin/sh", "-c", "./cmd.sh 2>&1 | tee report.log")
 	cmd.Dir = dir
 	tpl, err := cmd.Output()
 	if nil != err {

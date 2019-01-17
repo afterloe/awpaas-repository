@@ -61,7 +61,7 @@ func GetRegistryType() interface{} {
 func DefaultCmd(inputType string, content ...string) (*cmd, error) {
 	for _, t := range registryType {
 		if t == inputType {
-			return &cmd{inputType, content}, nil
+			return &cmd{inputType, content, "", 0}, nil
 		}
 	}
 	return nil, &exceptions.Error{Msg: "no such this type", Code: 400}
@@ -182,6 +182,7 @@ func execShell(dir string, args ...string) (interface{}, error) {
  */
 func Build(w *warehouse) (interface{}, error) {
 	cmd := w.Cmd
+	cmd.LastCiTime = time.Now().Unix()
 	switch cmd.RegistryType {
 		case "tar":
 			task := util.GeneratorUUID()
@@ -189,7 +190,10 @@ func Build(w *warehouse) (interface{}, error) {
 			go func() {
 				soaClient.DownloadFile(fmt.Sprintf("http://%s/v1/download/%s", fsServiceName, w.Fid),
 					context)
-				execShell(context, cmd.Content...)
+				rep, _ := execShell(context, cmd.Content...)
+				cmd.LastReport = rep.(string)
+				w.Cmd = cmd
+				w.Modify()
 			}()
 			return task, nil
 		case "image":

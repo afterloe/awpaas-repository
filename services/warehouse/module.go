@@ -26,6 +26,8 @@ var registryType = [3]string{}
 type cmd struct {
 	RegistryType string `json:"registryType"`
 	Content []string `json:"content"`
+	LastReport string `json:"lastReport"`
+	LastCiTime int64 `json:"lastCiTime"`
 }
 
 func (this *cmd) String() string {

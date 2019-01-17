@@ -16,8 +16,7 @@ type warehouse struct {
 	Group string `json:"group"`
 	Remarks string `json:"remarks"`
 	Version string `json:"version"`
-	Fid string `json:"fid"`
-	PackInfo map[string]interface{} `json:"packInfo"`
+	PackInfo interface{} `json:"packInfo"`
 	Cmd cmd `json:"cmd"`
 }
 

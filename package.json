@@ -1,6 +1,6 @@
 {
   "custom": {
-    "fsServiceName": "192.168.3.21:8080"
+    "root": "/tmp"
   },
   "info": {
     "name": "awpaas-repository",

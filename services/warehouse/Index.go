@@ -115,10 +115,6 @@ func Update(args, old *warehouse) (interface{}, error) {
 		old.Version = args.Version
 		flag = true
 	}
-	if "" != args.Fid && old.Fid != args.Fid {
-		old.Fid = args.Fid
-		flag = true
-	}
 	if !flag {
 		return nil, &exceptions.Error{Msg: "no change", Code: 400}
 	}

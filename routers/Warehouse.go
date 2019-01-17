@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"../services/warehouse"
+	"../services/fileSystem"
 	"../util"
 )
 
@@ -13,6 +14,37 @@ import (
 func WarehouseList(context *gin.Context) {
 	reply := warehouse.GetList(pageCondition(context))
 	context.JSON(http.StatusOK, util.Success(reply))
+}
+
+func WarehouseLoad(ctx *gin.Context) {
+	key := ctx.Param("key")
+	if 32 > len(key) {
+		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	reply, err := warehouse.GetOne(key)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	file, err := ctx.FormFile("file")
+	if nil != err {
+		ctx.SecureJSON(http.StatusBadRequest, util.Fail(400, "file not found."))
+		return
+	}
+	fs := fileSystem.Default(file.Filename, file.Header.Get("Content-Type"), file.Size)
+	reply.PackInfo = *fs
+	if nil != err {
+		ctx.SecureJSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	err = ctx.SaveUploadedFile(file, fs.GeneratorSavePath())
+	reply.Modify()
+	if nil != err {
+		ctx.SecureJSON(http.StatusInternalServerError, util.Fail(500, "io exception."))
+		return
+	}
+	ctx.SecureJSON(http.StatusOK, util.Success(true))
 }
 
 /**
@@ -41,7 +73,6 @@ func WarehouseAppend(context *gin.Context) {
 	w.Group = context.PostForm("group")
 	w.Remarks = context.PostForm("remarks")
 	w.Version = context.PostForm("version")
-	w.Fid = context.PostForm("fid")
 	err := w.Check("Name", "Fid", "Group", "Version") // 参数检测
 	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Error(err))
@@ -58,30 +89,30 @@ func WarehouseAppend(context *gin.Context) {
 /**
 	修改包信息
  */
- func WarehouseModify(ctx *gin.Context) {
+func WarehouseModify(ctx *gin.Context) {
  	id := ctx.PostForm("id")
  	if "" == id {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
-	 old, err := warehouse.GetOne(id)
-	 if nil != err {
-		 ctx.JSON(http.StatusInternalServerError, util.Error(err))
-		 return
-	 }
-	 w := warehouse.Default()
-	 w.Name = ctx.PostForm("name")
-	 w.Group = ctx.PostForm("group")
-	 w.Remarks = ctx.PostForm("remarks")
-	 w.Version = ctx.PostForm("version")
-	 w.Fid = ctx.PostForm("fid")
-	 reply, err := warehouse.Update(w, old)
-	 if nil != err {
-		 ctx.JSON(http.StatusInternalServerError, util.Error(err))
-		 return
-	 }
-	 ctx.JSON(http.StatusOK, util.Success(reply))
- }
+	old, err := warehouse.GetOne(id)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	w := warehouse.Default()
+	w.Name = ctx.PostForm("name")
+	w.Group = ctx.PostForm("group")
+	w.Remarks = ctx.PostForm("remarks")
+	w.Version = ctx.PostForm("version")
+	w.Fid = ctx.PostForm("fid")
+	reply, err := warehouse.Update(w, old)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, util.Success(reply))
+}
 
  /**
  	删除文件包

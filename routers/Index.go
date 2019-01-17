@@ -13,7 +13,8 @@ import (
  */
 func Execute(route *gin.RouterGroup) {
 	route.GET("/remote/repository", RemoteList) // 远程 - 镜像列表
-	route.POST("/remote/synchronization/:key") // 远程 - 镜像上传
+
+	route.POST("/warehouse/file/:key", WarehouseLoad) // 文件上传
 	route.GET("/remote/repository/:name/version") // 远程 - 指定镜像版本列表
 	route.GET("/remote/detail/:name/:version") // 远程 - 镜像详情
 

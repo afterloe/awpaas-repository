@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"../../exceptions"
 	"encoding/json"
 	"net/url"
 	"strings"
+	"os"
 )
 
 var (
@@ -93,16 +95,36 @@ func GeneratorClient() *http.Client {
 	return client
 }
 
-func GeneratorPostHeader() map[string]string {
-	return map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-	}
-}
-
 func GeneratorBody(vol interface{}) io.Reader {
 	buf, err := json.Marshal(vol)
 	if nil != err {
 		return nil
 	}
 	return strings.NewReader(string(buf))
+}
+
+func DownloadFile(url,savePath string) (map[string]interface{}, error) {
+	remote, err := http.NewRequest("GET", url, nil)
+	if nil != err {
+		return nil, err
+	}
+	return Invoke(remote, "soa-client", func(response *http.Response) (map[string]interface{}, error) {
+		if 200 != response.StatusCode {
+			return nil, &exceptions.Error{Msg: "download failed.", Code: 500}
+		}
+		_, e := os.Stat(savePath)
+		if nil != e {
+			os.Mkdir(savePath, os.ModePerm)
+		}
+		head := response.Header.Get("Content-Disposition")
+		filename := strings.Split(head, "attachment;filename=")[1]
+		desFile, _ := os.Create(savePath + "/" + filename)
+		io.Copy(desFile, response.Body)
+		defer desFile.Close()
+		defer response.Body.Close()
+		return map[string]interface{} {
+			"savePath": savePath,
+			"fileName": filename,
+		}, nil
+	})
 }

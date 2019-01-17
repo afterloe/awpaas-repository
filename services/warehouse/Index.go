@@ -7,13 +7,17 @@ import (
 	"../../config"
 	"../../util"
 	"time"
+	"fmt"
+	"os/exec"
+	"os"
+	"strings"
 )
 
 var fsServiceName string
 
 func init() {
 	fsServiceName = config.GetByTarget(config.Get("custom"), "fsServiceName").(string)
-	registryType = [3]string{"code", "image", "tar"}
+	registryType = [4]string{"code", "image", "tar", "soa-jvm"}
 }
 
 /**
@@ -58,7 +62,7 @@ func GetRegistryType() interface{} {
 func DefaultCmd(inputType string, content ...string) (*cmd, error) {
 	for _, t := range registryType {
 		if t == inputType {
-			return &cmd{inputType, content}, nil
+			return &cmd{inputType, content, "", 0}, nil
 		}
 	}
 	return nil, &exceptions.Error{Msg: "no such this type", Code: 400}
@@ -147,10 +151,67 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 	}
 }
 
+func execShell(dir string, args ...string) (interface{}, error) {
+	sh, err := os.Create(dir + "/cmd.sh")
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "create file error", Code: 500}
+	}
+	sh.WriteString("#!/bin/sh\n")
+	for _, c := range args {
+		sh.WriteString(c + "\n")
+	}
+	sh.Chmod(os.ModePerm)
+	sh.Close()
+	cmd := exec.Command("/bin/sh", "-c", "./cmd.sh 2>&1 | tee report.log")
+	cmd.Dir = dir
+	tpl, err := cmd.Output()
+	if nil != err {
+		report, _ := os.Open(dir + "/report.log")
+		report.WriteString(err.Error())
+		return nil, &exceptions.Error{Msg: err.Error(), Code: 500}
+	}
+	os.Remove(dir + "/cmd.sh")
+	return string(tpl), nil
+}
+
 /**
 	软件构建
+
+	1.查询源文件
+	2.判断ci类型
+	3.按照类型进行分发处理
  */
 func Build(w *warehouse) (interface{}, error) {
-
-	return nil, nil
+	cmd := w.Cmd
+	cmd.LastCiTime = time.Now().Unix()
+	switch cmd.RegistryType {
+		case "tar":
+			task := util.GeneratorUUID()
+			context := "/tmp/download/" + task
+			go func() {
+				soaClient.DownloadFile(fmt.Sprintf("http://%s/v1/download/%s", fsServiceName, w.Fid),
+					context)
+				rep, _ := execShell(context, cmd.Content...)
+				cmd.LastReport = rep.(string)
+				w.Cmd = cmd
+				w.Modify()
+			}()
+			return task, nil
+		case "image":
+			return nil, nil
+		case "code":
+			return nil, nil
+		case "soa-jvm":
+			task := util.GeneratorUUID()
+			context := "/tmp/download/" + task
+			go func() {
+				
+				cmd.LastReport = rep.(string)
+				w.Cmd = cmd
+				w.Modify()
+			}()
+			return nil, nil
+		default:
+			return nil, &exceptions.Error{Msg: "can't supper this"}
+	}
 }

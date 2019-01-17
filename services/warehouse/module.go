@@ -21,11 +21,13 @@ type warehouse struct {
 	Cmd cmd `json:"cmd"`
 }
 
-var registryType = [3]string{}
+var registryType = [4]string{}
 
 type cmd struct {
 	RegistryType string `json:"registryType"`
 	Content []string `json:"content"`
+	LastReport string `json:"lastReport"`
+	LastCiTime int64 `json:"lastCiTime"`
 }
 
 func (this *cmd) String() string {

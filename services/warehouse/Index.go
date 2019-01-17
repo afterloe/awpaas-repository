@@ -151,7 +151,6 @@ func GetOne(key string, fields ...string) (*warehouse, error) {
 }
 
 func execShell(dir string, args ...string) (interface{}, error) {
-	os.Remove(dir + "/cmd.sh")
 	sh, err := os.Create(dir + "/cmd.sh")
 	if nil != err {
 		return nil, &exceptions.Error{Msg: "create file error", Code: 500}
@@ -162,12 +161,15 @@ func execShell(dir string, args ...string) (interface{}, error) {
 	}
 	sh.Chmod(os.ModePerm)
 	sh.Close()
-	cmd := exec.Command("/bin/bash", "-c", "./cmd.sh > report.log")
+	cmd := exec.Command("/bin/sh", "./cmd.sh 2>&1 | tee report.log")
 	cmd.Dir = dir
 	tpl, err := cmd.Output()
 	if nil != err {
+		report, _ := os.Open(dir + "/report.log")
+		report.WriteString(err.Error())
 		return nil, &exceptions.Error{Msg: err.Error(), Code: 500}
 	}
+	os.Remove(dir + "/cmd.sh")
 	return string(tpl), nil
 }
 
@@ -184,12 +186,11 @@ func Build(w *warehouse) (interface{}, error) {
 		case "tar":
 			task := util.GeneratorUUID()
 			context := "/tmp/download/" + task
-			_, err := soaClient.DownloadFile(fmt.Sprintf("http://%s/v1/download/%s", fsServiceName, w.Fid),
-				context)
-			if nil != err {
-				return nil, err
-			}
-			go execShell(context, cmd.Content...)
+			go func() {
+				soaClient.DownloadFile(fmt.Sprintf("http://%s/v1/download/%s", fsServiceName, w.Fid),
+					context)
+				execShell(context, cmd.Content...)
+			}()
 			return task, nil
 		case "image":
 			return nil, nil

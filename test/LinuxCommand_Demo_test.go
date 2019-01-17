@@ -4,12 +4,16 @@ import (
 	"testing"
 	"os"
 	"os/exec"
+	"bufio"
+	"io"
+	"fmt"
 )
 
 func Test_Demo_demo(t *testing.T) {
 	//errorNotFound := errors.New("executable file not found in $PATH")
-	commandList := [3]string{"ls", "pwd", "tar -xzvf risk-point-0.0.5.tar.gz"}
-	dir := "/tmp/download/F1A0DA6DF9F34FF3B511900BA0FEA1A8"
+	commandList := [3]string{"tar -xzvf risk-point-0.0.5.tar.gz", "docker build -t 127.0.0.1/ascs/risk-point:0.0.5",
+	"docker push 127.0.0.1/ascs/risk-point:0.0.5"}
+	dir := "/tmp/download/9E04A3DCA7954DC39488D15ECD1CBE36"
 	os.Remove(dir + "/cmd.sh")
 	sh, err := os.Create(dir + "/cmd.sh")
 	if nil != err {
@@ -23,13 +27,23 @@ func Test_Demo_demo(t *testing.T) {
 	sh.Close()
 	cmd := exec.Command("/bin/bash", "-c", "./cmd.sh > report.log")
 	cmd.Dir = dir
-	tpl, err := cmd.Output()
+	stdout, err := cmd.StdoutPipe()
 	if nil != err {
 		t.Error(err)
 		t.Error("exec cmd.sh failed.")
 		return
 	}
-	t.Log(tpl)
+	cmd.Start()
+	reader := bufio.NewReader(stdout)
+	for {
+		line, err2 := reader.ReadString('\n')
+		if err2 != nil || io.EOF == err2 {
+			break
+		}
+		fmt.Println(line)
+	}
+	cmd.Wait()
+	t.Log("done")
 }
 
 /*

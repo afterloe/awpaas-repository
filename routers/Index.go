@@ -31,7 +31,6 @@ func Execute(route *gin.RouterGroup) {
 	route.PUT("/ci/warehouse/:key", CmdBuilder) // 构建 - 创建构建命令
 	route.DELETE("/ci/warehouse/:key") // 构建 - 删除构建命令
 	route.POST("/ci/warehouse/:key", CmdCi) // 构建 - 执行构建命令
-	route.GET("/ci/report", CmdReport)
 }
 
 /**

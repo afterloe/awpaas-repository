@@ -7,6 +7,9 @@ import (
 	"../../config"
 	"../../util"
 	"time"
+	"fmt"
+	"os/exec"
+	"bytes"
 )
 
 var fsServiceName string
@@ -158,11 +161,24 @@ func Build(w *warehouse) (interface{}, error) {
 	cmd := w.Cmd
 	switch cmd.RegistryType {
 		case "code":
-			reply, _ := soaClient.Call("GET", fsServiceName, "/v1/download/" + w.Fid, nil, nil)
-			if 200 != reply["code"].(float64) {
-				return nil, &exceptions.Error{Msg: "no such this file", Code: 400}
+			context := "/tmp/download/" + util.GeneratorUUID()
+			_, err := soaClient.DownloadFile(fmt.Sprintf("http://%s/v1/download/%s", fsServiceName, w.Fid),
+				context)
+			if nil != err {
+				return nil, err
 			}
-			return nil, nil
+			reply := make([]string, 0)
+			for _, c := range cmd.Content {
+				var out bytes.Buffer
+				e := exec.Command(context, c)
+				e.Stdout = &out
+				err := e.Run()
+				if nil != err {
+					return nil, err
+				}
+				reply = append(reply, out.String())
+			}
+			return reply, nil
 		case "image":
 			return nil, nil
 		case "tar":

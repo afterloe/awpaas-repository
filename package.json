@@ -1,6 +1,7 @@
 {
   "custom": {
-    "root": "/tmp"
+    "root": "/tmp",
+    "fsServiceName": "file-system"
   },
   "info": {
     "name": "awpaas-repository",

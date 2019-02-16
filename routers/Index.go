@@ -12,6 +12,11 @@ import (
 	路由列表
  */
 func Execute(route *gin.RouterGroup) {
+
+	// 上传镜像
+	route.PUT("/file", FsUpload)
+	route.GET("/download/:key", FsDownload) // 下载
+
 	route.GET("/remote/repository", RemoteList) // 远程 - 镜像列表
 
 	route.POST("/warehouse/file/:key", WarehouseLoad) // 文件上传

@@ -1,7 +1,8 @@
 package borderSystem
 
 import (
-	"../../integrate/couchdb"
+	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
 	"../../exceptions"
 	"../../util"
 	"../../config"
@@ -13,6 +14,7 @@ import (
 
 var (
 	root string
+	dbPath string
 )
 
 func init() {
@@ -25,9 +27,26 @@ func (this *fsFile) SaveToDB(rev ...bool) (map[string]interface{}, error){
 		jsonStr, _ := util.FormatToString(*this)
 		m, _ := util.FormatToMap(jsonStr)
 		m["_rev"] = this.rev
-		return couchdb.Update(this.Id, m)
+		// TODO
+		return nil, nil
 	}
-	return couchdb.Create(this)
+	db, err := sql.Open("sqlite3", dbPath)
+	defer db.Close()
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "db open failed.", Code: 500}
+	}
+	tx, err := db.Begin()
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "db transaction open failed.", Code: 500}
+	}
+	stmt, err := tx.Prepare("insert into file(name, savePath, contentType, key, uploadTime, size, status, modifyTime, rev) values(?, ?, ?, ? ,? ,? ,? ,? ,?)")
+	stmt.Exec(this.Name, this.SavePath, this.ContentType, this.Key, this.UploadTime, this.Size, this.Status, this.ModifyTime, this.rev)
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+	}
+	defer stmt.Close()
+	tx.Commit()
+	return map[string]interface{}{}, nil
 }
 
 func (this *fsFile) Del(f ...bool) error {

@@ -32,9 +32,8 @@
     },
     "db": {
       "ping": true,
-      "database": "registry",
-      "addr": "192.168.3.21",
-      "port": "5984",
+      "dbType": "sqlite3",
+      "database": "/Users/afterloe/Afterloe/go/upm.dll",
       "username": "ascs",
       "password": "ascs.tech"
     },

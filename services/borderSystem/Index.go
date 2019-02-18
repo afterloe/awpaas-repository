@@ -30,7 +30,7 @@ func (this *fsFile) GeneratorSavePath() string {
 
 func (this *fsFile) SaveToDB(rev ...bool) (map[string]interface{}, error){
 	if 0 != len(rev) {
-		if "" == this.Id {
+		if 0 == this.Id {
 			return nil, &exceptions.Error{Msg: "id can't be empty", Code: 400}
 		}
 		return dbConnect.WithTransaction(func(tx *sql.Tx) (map[string]interface{}, error) {
@@ -117,9 +117,14 @@ func GetList(begin, limit int) []map[string]interface{} {
 	return reply
 }
 
-func GetOne(key string, fields ...string) (*fsFile, error) {
-	str := dbConnect.Select("file").Fields("id,name, savePath, contentType, key, uploadTime, size, status, modifyTime").
-		AND("id = ?", "status = ?")
+func GetOne(key int, fields ...string) (*fsFile, error) {
+	str := dbConnect.Select("file")
+	if 0 == len(fields) {
+		str.Fields("id,name, savePath, contentType, key, uploadTime, size, status, modifyTime")
+	} else {
+		str.Fields(fields...)
+	}
+	str.AND("id = ?", "status = ?")
 	one, err := dbConnect.WithQuery(str.Preview(), func(rows *sql.Rows) (interface{}, error) {
 		target := new(fsFile)
 		for rows.Next() {

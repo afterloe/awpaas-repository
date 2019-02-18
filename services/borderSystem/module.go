@@ -14,7 +14,7 @@ func init() {
 }
 
 type fsFile struct {
-	Id string `json:"id"`
+	Id int64 `json:"id"`
 	Name string `json:"name"`
 	SavePath string `json:"savePath"`
 	ContentType string `json:"contentType"`

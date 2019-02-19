@@ -18,7 +18,7 @@ func CmdList(ctx *gin.Context) {
 /**
 	查询构建详情
  */
-func CMDGet(ctx *gin.Context) {
+func CmdGet(ctx *gin.Context) {
 	key := ctx.Param("key")
 	val, err := strconv.ParseInt(key, 10, 64)
 	if nil != err {
@@ -79,7 +79,7 @@ func CmdBuilder(ctx *gin.Context) {
 /**
 	构建 - 执行构建命令
  */
-func CmdCi(ctx *gin.Context) {
+func RunCi(ctx *gin.Context) {
 	key := ctx.Param("key")
 	val, err := strconv.ParseInt(key, 10, 64)
 	if nil != err {

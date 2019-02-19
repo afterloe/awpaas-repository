@@ -14,30 +14,30 @@ import (
 func Execute(route *gin.RouterGroup) {
 
 	// 上传镜像
-	route.PUT("/file", FsUpload)
+	route.PUT("/file", FsUpload) // 文件上传
 	route.GET("/download/:key", FsDownload) // 下载
 
 	route.GET("/remote/repository", RemoteList) // 远程 - 镜像列表
-
-	route.POST("/warehouse/file/:key", WarehouseLoad) // 文件上传
 	route.GET("/remote/repository/:name/version") // 远程 - 指定镜像版本列表
 	route.GET("/remote/detail/:name/:version") // 远程 - 镜像详情
 
 	// 镜像管理
 	route.GET("/warehouse", WarehouseList) // 镜像管理 - 镜像查询
-	route.GET("/warehouse/:key", WarehouseOne) // 镜像管理 - 查看详情
 	route.PUT("/warehouse", WarehouseAppend) // 镜像管理 - 镜像创建
 	route.POST("/warehouse", WarehouseModify) // 镜像管理 - 镜像信息修改
+	route.GET("/warehouse/:key", WarehouseOne) // 镜像管理 - 查看详情
 	route.DELETE("/warehouse/:key", WarehouseDel) // 镜像管理 - 镜像删除
 	route.GET("/export/:key") // 镜像管理 - 导出
 
+	// 常量字典
+	route.GET("/dictionaries/ci", CmdList) // 构建类型列表
+
 	// 构建
-	route.GET("/ci/type", CmdList) // 构建类型列表
-	route.GET("/ci/:key", CMDGet) // 获取构建命令详情
-	route.POST("/ci/:key", CmdCi) // 执行构建命令
-	route.GET("/ci/warehouse/:key", CIList) // 构建 - 查询构建信息
-	route.PUT("/ci/warehouse/:key", CmdBuilder) // 构建 - 创建构建命令
-	route.DELETE("/ci/warehouse/:key") // 构建 - 删除构建命令
+	route.GET("/ci/item/:key", CmdGet) // 获取构建命令详情
+	route.POST("/ci/item/:key", RunCi) // 执行构建命令
+	route.GET("/ci/warehouse/:key", CIList) // 查询构建信息
+	route.PUT("/ci/warehouse/:key", CmdBuilder) // 创建构建命令
+	route.DELETE("/ci/warehouse/:key") // 删除构建命令
 
 	// 镜像运行
 	route.PUT("/run/:key") // 执行镜像

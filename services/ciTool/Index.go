@@ -98,8 +98,9 @@ func AppendCI(warehouseId int64, fileType string, cmds []*cmd) (interface{}, err
 		saveCI, _ := tx.Prepare("INSERT INTO ci(warehouseId, registryType, createTime, status) VALUES (?,?,?,?)")
 		r, _ := saveCI.Exec(warehouseId, fileType, time.Now().Unix(), true)
 		saveCmd, _ := tx.Prepare("INSERT INTO cmd(cid, context, createTime, status) VALUES (?, ?, ?)")
+		lastId, _ := r.LastInsertId()
 		for v := range cmds {
-			saveCmd.Exec(r.LastInsertId(), v, time.Now().Unix(), true)
+			saveCmd.Exec(lastId, v, time.Now().Unix(), true)
 		}
 		return nil, nil
 	})

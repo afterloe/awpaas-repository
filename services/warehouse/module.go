@@ -9,7 +9,7 @@ import (
 
 type warehouse struct {
 	rev string
-	Id string `json:"id"`
+	Id int64 `json:"id"`
 	Status bool `json:"status"`
 	ModifyTime int64 `json:"modifyTime"`
 	UploadTime int64 `json:"uploadTime"`

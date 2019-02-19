@@ -14,7 +14,7 @@ import (
 
 var (
 	root string
-	insertSQL = "INSERT INTO file(name, savePath, contentType, key, uploadTime, size, status, modifyTime, rev) values(?, ?, ?, ? ,? ,? ,? ,? ,?)"
+	insertSQL = "INSERT INTO file(name, savePath, contentType, key, uploadTime, size, status, modifyTime, rev) VALUES (?, ?, ?, ? ,? ,? ,? ,? ,?)"
 	updateSQL = "UPDATE file SET modifyTime = ?, status = ? WHERE id = ?"
 	deleteSQL = "DELETE FROM file WHERE id = ?"
 )
@@ -30,6 +30,7 @@ func (this *fsFile) GeneratorSavePath() string {
 
 func (this *fsFile) SaveToDB(rev ...bool) (map[string]interface{}, error){
 	if 0 != len(rev) {
+		this.ModifyTime = time.Now().Unix()
 		if 0 == this.Id {
 			return nil, &exceptions.Error{Msg: "id can't be empty", Code: 400}
 		}
@@ -79,7 +80,7 @@ func (this *fsFile) Del(f ...bool) error {
 	}
 }
 
-func Del(id string, f ...bool) error {
+func Del(id int64, f ...bool) error {
 	file, err := GetOne(id)
 	if nil != err {
 		return err
@@ -117,7 +118,7 @@ func GetList(begin, limit int) []map[string]interface{} {
 	return reply
 }
 
-func GetOne(key int, fields ...string) (*fsFile, error) {
+func GetOne(key int64, fields ...string) (*fsFile, error) {
 	str := dbConnect.Select("file")
 	if 0 == len(fields) {
 		str.Fields("id,name, savePath, contentType, key, uploadTime, size, status, modifyTime")
@@ -133,5 +134,8 @@ func GetOne(key int, fields ...string) (*fsFile, error) {
 		return target, nil
 	}, key, true)
 	f := one.(fsFile)
+	if 0 == f.Id {
+		return nil, &exceptions.Error{Msg: "no such this file", Code: 404}
+	}
 	return &f, err
 }

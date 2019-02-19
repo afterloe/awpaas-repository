@@ -1,7 +1,8 @@
 package warehouse
 
 import (
-	"../../integrate/couchdb"
+	"../dbConnect"
+	"../../integrate/logger"
 	"../../exceptions"
 	"../../config"
 	"../../util"
@@ -9,9 +10,14 @@ import (
 	"fmt"
 	"os/exec"
 	"os"
+	"database/sql"
 )
 
-var fsServiceName, root string
+var (
+	fsServiceName, root string
+	insertSQL = "INSERT INTO warehouse(name, \"group\", remarks, version, packInfo, uploadTime, modifyTime, status) VALUES(?,?,?,?,?,?,?,?)"
+	updateSQL = "UPDATE warehouse SET name = ?, \"group\" = ?, remarks = ?, version = ? packInfo = ?, modifyTime = ?, status = ? WHERE id = ?"
+)
 
 func init() {
 	cfg := config.Get("custom")
@@ -24,15 +30,31 @@ func init() {
 	保存至远程
 */
 func (this *warehouse) SaveToDB() (map[string]interface{}, error) {
-	return couchdb.Create(this)
+	return dbConnect.WithTransaction(func(tx *sql.Tx) (map[string]interface{}, error) {
+		stmt, err := tx.Prepare(insertSQL)
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+		}
+		stmt.Exec(this.Name, this.Group, this.Remarks, this.Version, this.PackInfo, this.UploadTime, this.ModifyTime, this.Status)
+		logger.Logger("warehouse", "insert success")
+		return map[string]interface{}{}, nil
+	})
 }
 
 func (this *warehouse) Modify() (map[string]interface{}, error) {
 	this.ModifyTime = time.Now().Unix()
-	jsonStr, _ := util.FormatToString(*this)
-	m, _ := util.FormatToMap(jsonStr)
-	m["_rev"] = this.rev
-	return couchdb.Update(this.Id, m)
+	if 0 == this.Id {
+		return nil, &exceptions.Error{Msg: "no such this id", Code: 400}
+	}
+	return dbConnect.WithTransaction(func(tx *sql.Tx) (map[string]interface{}, error) {
+		stmt, err := tx.Prepare(updateSQL)
+		if nil != err {
+			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
+		}
+		stmt.Exec(this.Name, this.Group, this.Remarks, this.Version, this.PackInfo, this.ModifyTime, this.Status, this.Id)
+		logger.Logger("warehouse", "update success")
+		return map[string]interface{}{}, nil
+	})
 }
 
 func GetRegistryType() interface{} {
@@ -58,10 +80,13 @@ func Default() *warehouse {
 /**
 	获取包列表
 */
-func GetList(begin, limit int) []interface{} {
-	reply, _ := couchdb.Find(couchdb.Condition().Append("status", "$eq", true).
-		Fields("_id", "name", "uploadTime", "group").
-		Page(begin, limit))
+func GetList(begin, limit int) []map[string]interface{} {
+	reply, err := dbConnect.Select("warehouse").
+		Fields("id", "name", "uploadTime", "group").
+		AND("status = ?").Page(begin, limit).Query(true)
+	if nil != err {
+		return nil
+	}
 	return reply
 }
 
@@ -105,26 +130,25 @@ func Update(args, old *warehouse) (interface{}, error) {
 	查询包详细信息
 */
 func GetOne(key string, fields ...string) (*warehouse, error) {
-	condition := couchdb.Condition().Append("_id", "$eq", key).
-		Append("status", "$eq", true)
-	if 0 != len(fields) {
-		condition = condition.Fields(fields...)
-	}
-	reply, _ := couchdb.Find(condition)
-	if 0 != len(reply) {
-		var target warehouse
-		item := reply[0].(map[string]interface{})
-		couchdb.Decode(item, &target)
-		if nil != item["_id"] {
-			target.Id = item["_id"].(string)
-		}
-		if nil != item["_rev"] {
-			target.rev = item["_rev"].(string)
-		}
-		return &target, nil
+	str := dbConnect.Select("file")
+	if 0 == len(fields) {
+		str.Fields("id, name, \"group\", remarks, version, packInfo, uploadTime, modifyTime, status")
 	} else {
+		str.Fields(fields...)
+	}
+	str.AND("id = ?", "status = ?")
+	one, err := dbConnect.WithQuery(str.Preview(), func(rows *sql.Rows) (interface{}, error) {
+		target := new(warehouse)
+		for rows.Next() {
+			rows.Scan(&target.Id, &target.Name, &target.Group, &target.Remarks, &target.Version, &target.PackInfo, &target.UploadTime, &target.ModifyTime, &target.Status)
+		}
+		return target, nil
+	}, key, true)
+	w := one.(warehouse)
+	if 0 == w.Id {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
+	return &w, err
 }
 
 func GeneratorFsFile(name, contentType string, size int64) *fsFile {

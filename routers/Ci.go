@@ -3,56 +3,72 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 	"../util"
-	"../services/warehouse"
+	"../services/ciTool"
 	"net/http"
+	"strconv"
 )
 
 /**
 	构建 - 获取ci类型
  */
 func CmdList(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, util.Success(warehouse.GetRegistryType()))
+	ctx.JSON(http.StatusOK, util.Success(ciTool.GetRegistryType()))
 }
 
 /**
-	构建 - 查询构建信息
+	查询构建详情
  */
 func CmdGet(ctx *gin.Context) {
 	key := ctx.Param("key")
-	if 32 > len(key) {
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
-	reply, err := warehouse.GetOne(key, "cmd")
+	reply, err := ciTool.GetOne(val)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, util.Success(reply.Cmd))
+	ctx.JSON(http.StatusOK, util.Success(reply))
 }
 
 /**
-	构建 - 创建构建命令
+	构建 - 查询构建信息列表
+ */
+func CIList(ctx *gin.Context) {
+	key := ctx.Param("key")
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
+		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	reply, err := ciTool.CIList(val)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, util.Success(reply))
+}
+
+/**
+	构建 - 添加构建命令
  */
 func CmdBuilder(ctx *gin.Context) {
 	key := ctx.Param("key")
-	if 32 > len(key) {
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
 	fileType := ctx.PostForm("type")
 	content := ctx.PostFormArray("content")
-	cmd, err := warehouse.DefaultCmd(fileType, content...)
+	cmd, err := ciTool.DefaultCmd(val, fileType, content...)
 	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Error(err))
 		return
 	}
-	w, err := warehouse.GetOne(key)
-	if nil != err {
-		ctx.JSON(http.StatusInternalServerError, util.Error(err))
-		return
-	}
-	reply, err := warehouse.AppendCI(w, cmd)
+	reply, err := ciTool.AppendCI(val, fileType, cmd)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return
@@ -63,18 +79,14 @@ func CmdBuilder(ctx *gin.Context) {
 /**
 	构建 - 执行构建命令
  */
-func CmdCi(ctx *gin.Context) {
+func RunCi(ctx *gin.Context) {
 	key := ctx.Param("key")
-	if 32 > len(key) {
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
-	w, err := warehouse.GetOne(key)
-	if nil != err {
-		ctx.JSON(http.StatusInternalServerError, util.Error(err))
-		return
-	}
-	reply, err := warehouse.Build(w)
+	reply, err := ciTool.Run(val)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return

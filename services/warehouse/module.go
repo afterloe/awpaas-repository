@@ -4,12 +4,10 @@ import (
 	"../../exceptions"
 	"fmt"
 	"reflect"
-	"time"
 )
 
 type warehouse struct {
-	rev string
-	Id string `json:"id"`
+	Id int64 `json:"id"`
 	Status bool `json:"status"`
 	ModifyTime int64 `json:"modifyTime"`
 	UploadTime int64 `json:"uploadTime"`
@@ -17,25 +15,11 @@ type warehouse struct {
 	Group string `json:"group"`
 	Remarks string `json:"remarks"`
 	Version string `json:"version"`
-	PackInfo fsFile `json:"packInfo"`
-	Cmd cmd `json:"cmd"`
-}
-
-var registryType = [4]string{}
-
-type cmd struct {
-	RegistryType string `json:"registryType"`
-	Content []string `json:"content"`
-	LastReport string `json:"lastReport"`
-	LastCiTime int64 `json:"lastCiTime"`
-}
-
-func (this *cmd) String() string {
-	return fmt.Sprintf("{'fileType': '%s', 'content': '%v'}", this.RegistryType, this.Content)
+	FId int64
 }
 
 func (this *warehouse) String() string {
-	return fmt.Sprintf("{'name': '%s', 'id': '%s', 'rev': '%s'}", this.Name, this.Id, this.rev)
+	return fmt.Sprintf("{'name': '%s', 'id': '%s', 'rev': '%s'}", this.Name, this.Id)
 }
 
 /**
@@ -52,33 +36,5 @@ func (this *warehouse) Check(args ...string) error {
 			return &exceptions.Error{Msg: "lack param " + arg, Code: 400}
 		}
 	}
-
 	return nil
-}
-
-var (
-	timeFormat string
-)
-
-func init() {
-	timeFormat = "2006-01-02 - 15:04:05"
-}
-
-type fsFile struct {
-	Id string `json:"id"`
-	Name string `json:"name"`
-	SavePath string `json:"savePath"`
-	ContentType string `json:"contentType"`
-	Key string `json:"key"`
-	UploadTime int64 `json:"uploadTime"`
-	Size int64 `json:"size"`
-	Status bool `json:"status"`
-	ModifyTime int64 `json:"modifyTime"`
-	rev string
-}
-
-func (this *fsFile) String() string {
-	return fmt.Sprintf("name: %s savePaht: %s contentType: %s key: %s, uploadTime: %s, size: %d, status %v",
-		this.Name, this.SavePath, this.ContentType, this.Key, time.Unix(this.UploadTime, 0).Format(timeFormat),
-		this.Size, this.Status)
 }

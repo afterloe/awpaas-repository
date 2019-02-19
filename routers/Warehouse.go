@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"../services/warehouse"
 	"../util"
+	"strconv"
 )
 
 /**
@@ -15,47 +16,17 @@ func WarehouseList(context *gin.Context) {
 	context.JSON(http.StatusOK, util.Success(reply))
 }
 
-func WarehouseLoad(ctx *gin.Context) {
-	key := ctx.Param("key")
-	if 32 > len(key) {
-		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
-		return
-	}
-	reply, err := warehouse.GetOne(key)
-	if nil != err {
-		ctx.JSON(http.StatusInternalServerError, util.Error(err))
-		return
-	}
-	file, err := ctx.FormFile("file")
-	if nil != err {
-		ctx.SecureJSON(http.StatusBadRequest, util.Fail(400, "file not found."))
-		return
-	}
-	fs := warehouse.GeneratorFsFile(file.Filename, file.Header.Get("Content-Type"), file.Size)
-	reply.PackInfo = *fs
-	if nil != err {
-		ctx.SecureJSON(http.StatusInternalServerError, util.Error(err))
-		return
-	}
-	err = ctx.SaveUploadedFile(file, fs.GeneratorSavePath())
-	reply.Modify()
-	if nil != err {
-		ctx.SecureJSON(http.StatusInternalServerError, util.Fail(500, "io exception."))
-		return
-	}
-	ctx.SecureJSON(http.StatusOK, util.Success(true))
-}
-
 /**
 	查询包详情
 */
 func WarehouseOne(ctx *gin.Context) {
 	key := ctx.Param("key")
-	if 32 > len(key) {
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
-	reply, err := warehouse.GetOne(key)
+	reply, err := warehouse.GetOne(val)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return
@@ -72,7 +43,10 @@ func WarehouseAppend(context *gin.Context) {
 	w.Group = context.PostForm("group")
 	w.Remarks = context.PostForm("remarks")
 	w.Version = context.PostForm("version")
-	err := w.Check("Name", "Fid", "Group", "Version") // 参数检测
+	key := context.PostForm("fid")
+	val, err := strconv.ParseInt(key, 10, 64)
+	w.FId = val
+	err = w.Check("Name", "Fid", "Group", "Version") // 参数检测
 	if nil != err {
 		context.JSON(http.StatusBadRequest, util.Error(err))
 		return
@@ -90,11 +64,12 @@ func WarehouseAppend(context *gin.Context) {
  */
 func WarehouseModify(ctx *gin.Context) {
  	id := ctx.PostForm("id")
- 	if "" == id {
+	val, err := strconv.ParseInt(id, 10, 64)
+	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
-	old, err := warehouse.GetOne(id)
+	old, err := warehouse.GetOne(val)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return
@@ -117,11 +92,12 @@ func WarehouseModify(ctx *gin.Context) {
   */
  func WarehouseDel(ctx *gin.Context) {
 	 key := ctx.Param("key")
-	 if 32 > len(key) {
+	 val, err := strconv.ParseInt(key, 10, 64)
+	 if nil != err {
 		 ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		 return
 	 }
-	 reply, err := warehouse.GetOne(key)
+	 reply, err := warehouse.GetOne(val)
 	 if nil != err {
 		 ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		 return

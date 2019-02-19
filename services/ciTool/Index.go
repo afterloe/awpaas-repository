@@ -2,11 +2,18 @@ package ciTool
 
 import (
 	"../../exceptions"
+	"../dbConnect"
 	"../warehouse"
 	"fmt"
 	"os"
 	"time"
 	"os/exec"
+	"database/sql"
+)
+
+const (
+	selectCISQL = "SELECT id, registryType, lastReport, lastCITime FROM ci WHERE status = ? AND warehouseId = ?"
+	selectCMDSQL = "SELECT id,context FROM cmd WHERE status = ? AND cid = ? ORDER BY id AES"
 )
 
 func init()  {
@@ -30,9 +37,32 @@ func DefaultCmd(id int64, inputType string, content ...string) (*cmd, error) {
 	return nil, &exceptions.Error{Msg: "no such this type", Code: 400}
 }
 
-func FindCICommandList(id int64) ([]interface{}, error) {
-	// TODO
-	return nil, nil
+func FindCIInfo(id int64) (*ci, error) {
+	p, err := dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
+		ciInfo, _ := tx.Prepare(selectCISQL)
+		rows, _ := ciInfo.Query(true, id)
+		target := new(ci)
+		for rows.Next() {
+			rows.Scan(&target.Id, &target.RegistryType, &target.LastReport, &target.LastCiTime)
+		}
+		if 0 == target.Id {
+			return target, &exceptions.Error{Msg: "no such this warehouse", Code: 404}
+		}
+		cmds, _ := tx.Prepare(selectCMDSQL)
+		rows, _ = cmds.Query(true, target.Id)
+		context := make([]*cmd, 0)
+		for rows.Next() {
+			c := new(cmd)
+			rows.Scan(&c.Id, &c.Context)
+			context = append(context, c)
+		}
+		target.Content = context
+		return target, nil
+	})
+	if nil != err {
+		return nil, err
+	}
+	return p.(*ci), nil
 }
 
 func AppendCI(ci *cmd) (interface{}, error) {
@@ -49,7 +79,12 @@ func AppendCI(ci *cmd) (interface{}, error) {
 	2.判断ci类型
 	3.按照类型进行分发处理
  */
-func Build() (interface{}, error) {
+func Build(warehouseId int64) (interface{}, error) {
+	_, err := warehouse.GetOne(warehouseId, "id")
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
+	}
+	// TODO
 	cmd := w.Cmd
 	cmd.LastCiTime = time.Now().Unix()
 	switch cmd.RegistryType {

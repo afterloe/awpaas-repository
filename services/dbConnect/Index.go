@@ -133,7 +133,7 @@ func WithPrepare(sql string, callback func(*sql.Stmt) (map[string]interface{}, e
 	return callback(stmt)
 }
 
-func WithTransaction(callback func(*sql.Tx) (map[string]interface{}, error)) (map[string]interface{}, error) {
+func WithTransaction(callback func(*sql.Tx) (interface{}, error)) (interface{}, error) {
 	conn := getConnection()
 	defer conn.Close()
 	tx, err := conn.Begin()

@@ -7,7 +7,6 @@ import (
 )
 
 type warehouse struct {
-	rev string
 	Id int64 `json:"id"`
 	Status bool `json:"status"`
 	ModifyTime int64 `json:"modifyTime"`
@@ -16,10 +15,11 @@ type warehouse struct {
 	Group string `json:"group"`
 	Remarks string `json:"remarks"`
 	Version string `json:"version"`
+	FId string
 }
 
 func (this *warehouse) String() string {
-	return fmt.Sprintf("{'name': '%s', 'id': '%s', 'rev': '%s'}", this.Name, this.Id, this.rev)
+	return fmt.Sprintf("{'name': '%s', 'id': '%s', 'rev': '%s'}", this.Name, this.Id)
 }
 
 /**

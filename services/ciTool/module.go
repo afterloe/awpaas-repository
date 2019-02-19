@@ -5,6 +5,7 @@ import "fmt"
 var registryType = [4]string{}
 
 type cmd struct {
+	WarehouseId int64
 	RegistryType string `json:"registryType"`
 	Content []string `json:"content"`
 	LastReport string `json:"lastReport"`

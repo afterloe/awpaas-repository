@@ -6,14 +6,12 @@ import (
 	"../../exceptions"
 	"../../config"
 	"time"
-	"os/exec"
-	"os"
 	"database/sql"
 )
 
 var (
 	fsServiceName, root string
-	insertSQL = "INSERT INTO warehouse(name, \"group\", remarks, version, uploadTime, modifyTime, status) VALUES(?,?,?,?,?,?,?,?)"
+	insertSQL = "INSERT INTO warehouse(fid, name, \"group\", remarks, version, uploadTime, modifyTime, status) VALUES(?,?,?,?,?,?,?,?)"
 	updateSQL = "UPDATE warehouse SET name = ?, \"group\" = ?, remarks = ?, version = ?, modifyTime = ?, status = ? WHERE id = ?"
 )
 
@@ -32,7 +30,7 @@ func (this *warehouse) SaveToDB() (map[string]interface{}, error) {
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(this.Name, this.Group, this.Remarks, this.Version, this.UploadTime, this.ModifyTime, this.Status)
+		stmt.Exec(this.FId, this.Name, this.Group, this.Remarks, this.Version, this.UploadTime, this.ModifyTime, this.Status)
 		logger.Logger("warehouse", "insert success")
 		return map[string]interface{}{}, nil
 	})
@@ -124,27 +122,4 @@ func GetOne(key int64, fields ...string) (*warehouse, error) {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
 	return &w, err
-}
-
-func execShell(dir string, args ...string) (interface{}, error) {
-	sh, err := os.Create(dir + "/cmd.sh")
-	if nil != err {
-		return nil, &exceptions.Error{Msg: "create file error", Code: 500}
-	}
-	sh.WriteString("#!/bin/sh\n")
-	for _, c := range args {
-		sh.WriteString(c + "\n")
-	}
-	sh.Chmod(os.ModePerm)
-	sh.Close()
-	cmd := exec.Command("/bin/sh", "-c", "./cmd.sh 2>&1 | tee report.log")
-	cmd.Dir = dir
-	tpl, err := cmd.Output()
-	if nil != err {
-		report, _ := os.Open(dir + "/report.log")
-		report.WriteString(err.Error())
-		return nil, &exceptions.Error{Msg: err.Error(), Code: 500}
-	}
-	os.Remove(dir + "/cmd.sh")
-	return string(tpl), nil
 }

@@ -5,6 +5,7 @@ import (
 	"../util"
 	"../services/ciTool"
 	"net/http"
+	"strconv"
 )
 
 /**
@@ -19,40 +20,37 @@ func CmdList(ctx *gin.Context) {
  */
 func CmdGet(ctx *gin.Context) {
 	key := ctx.Param("key")
-	if 32 > len(key) {
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
-	reply, err := warehouse.GetOne(key, "cmd")
+	reply, err := ciTool.FindCICommandList(val)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, util.Success(reply.Cmd))
+	ctx.JSON(http.StatusOK, util.Success(reply))
 }
 
 /**
-	构建 - 创建构建命令
+	构建 - 添加构建命令
  */
 func CmdBuilder(ctx *gin.Context) {
 	key := ctx.Param("key")
-	if 32 > len(key) {
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
 	fileType := ctx.PostForm("type")
 	content := ctx.PostFormArray("content")
-	cmd, err := warehouse.DefaultCmd(fileType, content...)
+	cmd, err := ciTool.DefaultCmd(val, fileType, content...)
 	if nil != err {
 		ctx.JSON(http.StatusBadRequest, util.Error(err))
 		return
 	}
-	w, err := warehouse.GetOne(key)
-	if nil != err {
-		ctx.JSON(http.StatusInternalServerError, util.Error(err))
-		return
-	}
-	reply, err := warehouse.AppendCI(w, cmd)
+	reply, err := ciTool.AppendCI(cmd)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return

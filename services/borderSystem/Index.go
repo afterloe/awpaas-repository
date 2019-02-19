@@ -14,7 +14,7 @@ import (
 
 var (
 	root string
-	insertSQL = "INSERT INTO file(name, savePath, contentType, key, uploadTime, size, status, modifyTime, rev) VALUES (?, ?, ?, ? ,? ,? ,? ,? ,?)"
+	insertSQL = "INSERT INTO file(name, savePath, contentType, key, uploadTime, size, status, modifyTime) VALUES (?, ?, ?, ? ,? ,? ,? ,?)"
 	updateSQL = "UPDATE file SET modifyTime = ?, status = ? WHERE id = ?"
 	deleteSQL = "DELETE FROM file WHERE id = ?"
 )
@@ -49,7 +49,7 @@ func (this *fsFile) SaveToDB(rev ...bool) (map[string]interface{}, error){
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(this.Name, this.SavePath, this.ContentType, this.Key, this.UploadTime, this.Size, this.Status, this.ModifyTime, this.rev)
+		stmt.Exec(this.Name, this.SavePath, this.ContentType, this.Key, this.UploadTime, this.Size, this.Status, this.ModifyTime)
 		logger.Logger("borderSystem", "insert success")
 		return map[string]interface{}{}, nil
 	})

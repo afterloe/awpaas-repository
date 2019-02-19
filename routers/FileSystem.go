@@ -6,6 +6,7 @@ import (
 	"../util"
 	"../services/borderSystem"
 	"os"
+	"strconv"
 )
 
 /**
@@ -34,11 +35,8 @@ func FsUpload(ctx *gin.Context) {
 
 func FsDownload(ctx *gin.Context) {
 	key := ctx.Param("key")
-	if 32 > len(key) {
-		ctx.SecureJSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
-		return
-	}
-	file, err := borderSystem.GetOne(key)
+	val, err := strconv.ParseInt(key, 10, 64)
+	file, err := borderSystem.GetOne(val)
 	if nil != err {
 		ctx.SecureJSON(http.StatusInternalServerError, util.Error(err))
 		return

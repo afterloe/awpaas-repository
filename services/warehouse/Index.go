@@ -129,7 +129,7 @@ func Update(args, old *warehouse) (interface{}, error) {
 /**
 	查询包详细信息
 */
-func GetOne(key string, fields ...string) (*warehouse, error) {
+func GetOne(key int64, fields ...string) (*warehouse, error) {
 	str := dbConnect.Select("file")
 	if 0 == len(fields) {
 		str.Fields("id, name, \"group\", remarks, version, packInfo, uploadTime, modifyTime, status")

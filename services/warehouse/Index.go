@@ -24,8 +24,8 @@ func init() {
 /**
 	保存至远程
 */
-func (this *warehouse) SaveToDB() (map[string]interface{}, error) {
-	return dbConnect.WithTransaction(func(tx *sql.Tx) (map[string]interface{}, error) {
+func (this *warehouse) SaveToDB() (interface{}, error) {
+	return dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
 		stmt, err := tx.Prepare(insertSQL)
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
@@ -36,12 +36,12 @@ func (this *warehouse) SaveToDB() (map[string]interface{}, error) {
 	})
 }
 
-func (this *warehouse) Modify() (map[string]interface{}, error) {
+func (this *warehouse) Modify() (interface{}, error) {
 	this.ModifyTime = time.Now().Unix()
 	if 0 == this.Id {
 		return nil, &exceptions.Error{Msg: "no such this id", Code: 400}
 	}
-	return dbConnect.WithTransaction(func(tx *sql.Tx) (map[string]interface{}, error) {
+	return dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
 		stmt, err := tx.Prepare(updateSQL)
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}

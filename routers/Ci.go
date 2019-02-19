@@ -25,7 +25,7 @@ func CMDGet(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
-	reply, err := ciTool.FindCIInfo(val)
+	reply, err := ciTool.GetOne(val)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return
@@ -86,7 +86,7 @@ func CmdCi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
 		return
 	}
-	reply, err := ciTool.Build(val)
+	reply, err := ciTool.Run(val)
 	if nil != err {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return

@@ -125,7 +125,7 @@ func WithQuery(sql string, callback func(rows *sql.Rows) (interface{}, error) , 
 	return callback(rows)
 }
 
-func WithPrepare(sql string, callback func(*sql.Stmt) (map[string]interface{}, error)) (map[string]interface{}, error){
+func WithPrepare(sql string, callback func(*sql.Stmt) (interface{}, error)) (interface{}, error){
 	conn := getConnection()
 	defer conn.Close()
 	stmt, _ := conn.Prepare(sql)

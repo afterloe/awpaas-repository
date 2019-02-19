@@ -10,6 +10,7 @@ import (
 	"time"
 	"../../integrate/logger"
 	"os"
+	"io"
 )
 
 var (
@@ -17,6 +18,7 @@ var (
 	insertSQL = "INSERT INTO file(name, savePath, contentType, key, uploadTime, size, status, modifyTime) VALUES (?, ?, ?, ? ,? ,? ,? ,?)"
 	updateSQL = "UPDATE file SET modifyTime = ?, status = ? WHERE id = ?"
 	deleteSQL = "DELETE FROM file WHERE id = ?"
+	bufferSize = 10240
 )
 
 func init() {
@@ -28,13 +30,13 @@ func (this *fsFile) GeneratorSavePath() string {
 	return fmt.Sprintf("%s/%s", this.SavePath, this.Key)
 }
 
-func (this *fsFile) SaveToDB(rev ...bool) (map[string]interface{}, error){
+func (this *fsFile) SaveToDB(rev ...bool) (interface{}, error){
 	if 0 != len(rev) {
 		this.ModifyTime = time.Now().Unix()
 		if 0 == this.Id {
 			return nil, &exceptions.Error{Msg: "id can't be empty", Code: 400}
 		}
-		return dbConnect.WithTransaction(func(tx *sql.Tx) (map[string]interface{}, error) {
+		return dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
 			stmt, err := tx.Prepare(updateSQL)
 			if nil != err {
 				return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
@@ -44,7 +46,7 @@ func (this *fsFile) SaveToDB(rev ...bool) (map[string]interface{}, error){
 			return map[string]interface{}{}, nil
 		})
 	}
-	return dbConnect.WithTransaction(func (tx *sql.Tx)(map[string]interface{}, error) {
+	return dbConnect.WithTransaction(func (tx *sql.Tx)(interface{}, error) {
 		stmt, err := tx.Prepare(insertSQL)
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
@@ -58,7 +60,7 @@ func (this *fsFile) SaveToDB(rev ...bool) (map[string]interface{}, error){
 func (this *fsFile) Del(f ...bool) error {
 	if 0 != len(f) { // 强制删除
 		logger.Logger("borderSystem", "强制删除文件")
-		dbConnect.WithPrepare(deleteSQL, func(stmt *sql.Stmt) (map[string]interface{}, error) {
+		dbConnect.WithPrepare(deleteSQL, func(stmt *sql.Stmt) (interface{}, error) {
 			result, _ := stmt.Exec(this.Id)
 			affectNum, _ := result.RowsAffected()
 			if 0 != affectNum {
@@ -138,4 +140,33 @@ func GetOne(key int64, fields ...string) (*fsFile, error) {
 		return nil, &exceptions.Error{Msg: "no such this file", Code: 404}
 	}
 	return &f, err
+}
+
+func Copy(key int64, where ...string) (interface{}, error) {
+	f, err := GetOne(key)
+	if nil != err {
+		return nil, err
+	}
+	if 0 == len(where) {
+		return f.GeneratorSavePath(), nil
+	} else {
+		os.Mkdir(where[0], 777)
+		buf := make([]byte, bufferSize)
+		source, _ := os.Open(f.GeneratorSavePath())
+		destination, _ := os.Open(where[0] + "/" + f.Name)
+		for {
+			n, err := source.Read(buf)
+			if err != nil && err != io.EOF {
+				return nil, err
+			}
+			if n == 0 {
+				break
+			}
+
+			if _, err := destination.Write(buf[:n]); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return nil, nil
 }

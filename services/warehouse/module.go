@@ -15,7 +15,7 @@ type warehouse struct {
 	Group string `json:"group"`
 	Remarks string `json:"remarks"`
 	Version string `json:"version"`
-	FId string
+	FId int64
 }
 
 func (this *warehouse) String() string {

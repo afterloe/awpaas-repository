@@ -4,6 +4,8 @@ import (
 	"../../exceptions"
 	"../dbConnect"
 	"../warehouse"
+	"../borderSystem"
+	"../../util"
 	"fmt"
 	"os"
 	"time"
@@ -14,10 +16,19 @@ import (
 const (
 	selectCISQL = "SELECT id, registryType, lastReport, lastCITime FROM ci WHERE status = ? AND id = ? ORDER BY createTime DESC"
 	selectCMDSQL = "SELECT id,context FROM cmd WHERE status = ? AND cid = ? ORDER BY id AES"
+	updateCISQL = "UPDATE ci SET registryType = ?, lastReport = ?, lastCITime = ?, status = ? WHERE id = ?"
+	tmpDIR = "/tmp/download/"
 )
 
 func init()  {
 	registryType = [4]string{"code", "image", "tar", "soa-jvm"}
+}
+
+func (this *ci) Update() {
+	dbConnect.WithPrepare(updateCISQL, func(stmt *sql.Stmt) (interface{}, error) {
+		stmt.Exec(this.RegistryType, this.LastReport, this.LastCiTime, this.Status, this.Id)
+		return nil, nil
+	})
 }
 
 func GetRegistryType() interface{} {
@@ -54,7 +65,7 @@ func CIList(id int64) (interface{}, error) {
 		AND("warehouseId = ?", "status = ?").Query(id, true)
 }
 
-func FindCIInfo(id int64) (*ci, error) {
+func GetOne(id int64) (*ci, error) {
 	p, err := dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
 		ciInfo, _ := tx.Prepare(selectCISQL)
 		rows, _ := ciInfo.Query(true, id)
@@ -102,23 +113,24 @@ func AppendCI(warehouseId int64, fileType string, cmds []*cmd) (interface{}, err
 	2.判断ci类型
 	3.按照类型进行分发处理
  */
-func Build(warehouseId int64) (interface{}, error) {
-	_, err := warehouse.GetOne(warehouseId, "id")
+func Run(ciId int64) (interface{}, error) {
+	ci, err := GetOne(ciId)
 	if nil != err {
-		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
+		return nil, &exceptions.Error{Msg: "no such this plain", Code: 404}
 	}
-	// TODO
-	cmd := w.Cmd
-	cmd.LastCiTime = time.Now().Unix()
-	switch cmd.RegistryType {
+	ci.LastCiTime = time.Now().Unix()
+	switch ci.RegistryType {
 	case "tar":
 		task := util.GeneratorUUID()
-		context := "/tmp/download/" + task
+		context := tmpDIR + task
 		go func() {
-			rep, _ := execShell(context, cmd.Content...)
-			cmd.LastReport = rep.(string)
-			w.Cmd = cmd
-			w.Modify()
+			shell := make([]string, 0)
+			for _, v := range ci.Content {
+				shell = append(shell, v.Context)
+			}
+			rep, _ := execShell(context, shell...)
+			ci.LastReport = rep.(string)
+			ci.Update()
 		}()
 		return task, nil
 	case "image":
@@ -127,18 +139,27 @@ func Build(warehouseId int64) (interface{}, error) {
 		return nil, nil
 	case "soa-jvm":
 		task := util.GeneratorUUID()
-		packageInfo := w.PackInfo
-		context := packageInfo.GeneratorSavePath() + "/" + task
+		w, err := warehouse.GetOne(ci.WarehouseId, "fid", "name")
+		if nil != err {
+			return nil, err
+		}
+		f, err := borderSystem.GetOne(w.FId)
+		if nil != err {
+			return nil, err
+		}
+		context := tmpDIR + task
+		_, err = borderSystem.Copy(f.Id, context)
+		if nil != err {
+			return nil, err
+		}
 		go func() {
-			rep, _ :=execShell(context, []string{
-				fmt.Sprintf("cp ../%s ./", packageInfo.Name),
-				fmt.Sprintf("tar -xzvf %s", packageInfo.Name),
+			rep, _ := execShell(context, []string{
+				fmt.Sprintf("tar -xzvf %s", f.Name),
 				fmt.Sprintf("docker build -t %s/%s/%s:%s .", "127.0.0.1", w.Group, w.Name, w.Version),
 				fmt.Sprintf("docker push %s/%s/%s:%s", "127.0.0.1", w.Group, w.Name, w.Version),
 			}...)
-			cmd.LastReport = rep.(string)
-			w.Cmd = cmd
-			w.Modify()
+			ci.LastReport = rep.(string)
+			ci.Update()
 			os.RemoveAll(context)
 		}()
 		return nil, nil

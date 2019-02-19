@@ -5,9 +5,7 @@ import (
 	"../../integrate/logger"
 	"../../exceptions"
 	"../../config"
-	"../../util"
 	"time"
-	"fmt"
 	"os/exec"
 	"os"
 	"database/sql"
@@ -15,15 +13,14 @@ import (
 
 var (
 	fsServiceName, root string
-	insertSQL = "INSERT INTO warehouse(name, \"group\", remarks, version, packInfo, uploadTime, modifyTime, status) VALUES(?,?,?,?,?,?,?,?)"
-	updateSQL = "UPDATE warehouse SET name = ?, \"group\" = ?, remarks = ?, version = ? packInfo = ?, modifyTime = ?, status = ? WHERE id = ?"
+	insertSQL = "INSERT INTO warehouse(name, \"group\", remarks, version, uploadTime, modifyTime, status) VALUES(?,?,?,?,?,?,?,?)"
+	updateSQL = "UPDATE warehouse SET name = ?, \"group\" = ?, remarks = ?, version = ?, modifyTime = ?, status = ? WHERE id = ?"
 )
 
 func init() {
 	cfg := config.Get("custom")
 	fsServiceName = config.GetByTarget(cfg, "fsServiceName").(string)
 	root = config.GetByTarget(cfg, "root").(string)
-	registryType = [4]string{"code", "image", "tar", "soa-jvm"}
 }
 
 /**
@@ -35,7 +32,7 @@ func (this *warehouse) SaveToDB() (map[string]interface{}, error) {
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(this.Name, this.Group, this.Remarks, this.Version, this.PackInfo, this.UploadTime, this.ModifyTime, this.Status)
+		stmt.Exec(this.Name, this.Group, this.Remarks, this.Version, this.UploadTime, this.ModifyTime, this.Status)
 		logger.Logger("warehouse", "insert success")
 		return map[string]interface{}{}, nil
 	})
@@ -51,23 +48,10 @@ func (this *warehouse) Modify() (map[string]interface{}, error) {
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(this.Name, this.Group, this.Remarks, this.Version, this.PackInfo, this.ModifyTime, this.Status, this.Id)
+		stmt.Exec(this.Name, this.Group, this.Remarks, this.Version, this.ModifyTime, this.Status, this.Id)
 		logger.Logger("warehouse", "update success")
 		return map[string]interface{}{}, nil
 	})
-}
-
-func GetRegistryType() interface{} {
-	return registryType
-}
-
-func DefaultCmd(inputType string, content ...string) (*cmd, error) {
-	for _, t := range registryType {
-		if t == inputType {
-			return &cmd{inputType, content, "", 0}, nil
-		}
-	}
-	return nil, &exceptions.Error{Msg: "no such this type", Code: 400}
 }
 
 func Default() *warehouse {
@@ -89,15 +73,6 @@ func GetList(begin, limit int) []map[string]interface{} {
 	}
 	return reply
 }
-
-func AppendCI(w *warehouse, ci *cmd) (interface{}, error) {
-	if nil == ci {
-		return nil, &exceptions.Error{Msg: "cmd not found", Code: 400}
-	}
-	w.Cmd = *ci
-	return w.Modify()
-}
-
 
 /**
 	更行包信息
@@ -132,7 +107,7 @@ func Update(args, old *warehouse) (interface{}, error) {
 func GetOne(key int64, fields ...string) (*warehouse, error) {
 	str := dbConnect.Select("file")
 	if 0 == len(fields) {
-		str.Fields("id, name, \"group\", remarks, version, packInfo, uploadTime, modifyTime, status")
+		str.Fields("id, name, \"group\", remarks, version, uploadTime, modifyTime, status")
 	} else {
 		str.Fields(fields...)
 	}
@@ -140,7 +115,7 @@ func GetOne(key int64, fields ...string) (*warehouse, error) {
 	one, err := dbConnect.WithQuery(str.Preview(), func(rows *sql.Rows) (interface{}, error) {
 		target := new(warehouse)
 		for rows.Next() {
-			rows.Scan(&target.Id, &target.Name, &target.Group, &target.Remarks, &target.Version, &target.PackInfo, &target.UploadTime, &target.ModifyTime, &target.Status)
+			rows.Scan(&target.Id, &target.Name, &target.Group, &target.Remarks, &target.Version, &target.UploadTime, &target.ModifyTime, &target.Status)
 		}
 		return target, nil
 	}, key, true)
@@ -149,22 +124,6 @@ func GetOne(key int64, fields ...string) (*warehouse, error) {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
 	return &w, err
-}
-
-func GeneratorFsFile(name, contentType string, size int64) *fsFile {
-	return &fsFile{
-		SavePath: root,
-		Key: util.GeneratorUUID(),
-		UploadTime: time.Now().Unix(),
-		Name: name,
-		ContentType: contentType,
-		Size: size,
-		Status: true,
-	}
-}
-
-func (this *fsFile) GeneratorSavePath() string {
-	return fmt.Sprintf("%s/%s", this.SavePath, this.Key)
 }
 
 func execShell(dir string, args ...string) (interface{}, error) {
@@ -188,51 +147,4 @@ func execShell(dir string, args ...string) (interface{}, error) {
 	}
 	os.Remove(dir + "/cmd.sh")
 	return string(tpl), nil
-}
-
-/**
-	软件构建
-
-	1.查询源文件
-	2.判断ci类型
-	3.按照类型进行分发处理
- */
-func Build(w *warehouse) (interface{}, error) {
-	cmd := w.Cmd
-	cmd.LastCiTime = time.Now().Unix()
-	switch cmd.RegistryType {
-		case "tar":
-			task := util.GeneratorUUID()
-			context := "/tmp/download/" + task
-			go func() {
-				rep, _ := execShell(context, cmd.Content...)
-				cmd.LastReport = rep.(string)
-				w.Cmd = cmd
-				w.Modify()
-			}()
-			return task, nil
-		case "image":
-			return nil, nil
-		case "code":
-			return nil, nil
-		case "soa-jvm":
-			task := util.GeneratorUUID()
-			packageInfo := w.PackInfo
-			context := packageInfo.GeneratorSavePath() + "/" + task
-			go func() {
-				rep, _ :=execShell(context, []string{
-					fmt.Sprintf("cp ../%s ./", packageInfo.Name),
-					fmt.Sprintf("tar -xzvf %s", packageInfo.Name),
-					fmt.Sprintf("docker build -t %s/%s/%s:%s .", "127.0.0.1", w.Group, w.Name, w.Version),
-					fmt.Sprintf("docker push %s/%s/%s:%s", "127.0.0.1", w.Group, w.Name, w.Version),
-				}...)
-				cmd.LastReport = rep.(string)
-				w.Cmd = cmd
-				w.Modify()
-				os.RemoveAll(context)
-			}()
-			return nil, nil
-		default:
-			return nil, &exceptions.Error{Msg: "can't supper this"}
-	}
 }

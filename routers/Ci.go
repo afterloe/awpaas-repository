@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 	"../util"
-	"../services/warehouse"
+	"../services/ciTool"
 	"net/http"
 )
 
@@ -11,7 +11,7 @@ import (
 	构建 - 获取ci类型
  */
 func CmdList(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, util.Success(warehouse.GetRegistryType()))
+	ctx.JSON(http.StatusOK, util.Success(ciTool.GetRegistryType()))
 }
 
 /**

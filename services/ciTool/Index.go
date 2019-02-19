@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	selectCISQL = "SELECT id, registryType, lastReport, lastCITime FROM ci WHERE status = ? AND warehouseId = ?"
+	selectCISQL = "SELECT id, registryType, lastReport, lastCITime FROM ci WHERE status = ? AND id = ? ORDER BY createTime DESC"
 	selectCMDSQL = "SELECT id,context FROM cmd WHERE status = ? AND cid = ? ORDER BY id AES"
 )
 
@@ -24,17 +24,34 @@ func GetRegistryType() interface{} {
 	return registryType
 }
 
-func DefaultCmd(id int64, inputType string, content ...string) (*cmd, error) {
+func DefaultCmd(id int64, inputType string, content ...string) ([]*cmd, error) {
 	_, err := warehouse.GetOne(id, "id")
 	if nil != err {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
+	flag := false
 	for _, t := range registryType {
 		if t == inputType {
-			return &cmd{id, inputType, content, "", 0}, nil
+			flag = true
 		}
 	}
-	return nil, &exceptions.Error{Msg: "no such this type", Code: 400}
+	if !flag {
+		return nil, &exceptions.Error{Msg: "no such this type", Code: 400}
+	}
+	context := make([]*cmd, 0)
+	for _, v := range content {
+		context = append(context, &cmd{Context: v, CreateTime: time.Now().Unix(), Status: true})
+	}
+	return context, nil
+}
+
+func CIList(id int64) (interface{}, error) {
+	_, err := warehouse.GetOne(id, "id")
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
+	}
+	return dbConnect.Select("ci").Fields("id", "registryType", "lastReport", "lastCITime", "createTime").
+		AND("warehouseId = ?", "status = ?").Query(id, true)
 }
 
 func FindCIInfo(id int64) (*ci, error) {
@@ -65,11 +82,17 @@ func FindCIInfo(id int64) (*ci, error) {
 	return p.(*ci), nil
 }
 
-func AppendCI(ci *cmd) (interface{}, error) {
-	if nil == ci {
-		return nil, &exceptions.Error{Msg: "cmd not found", Code: 400}
-	}
-	// TODO
+func AppendCI(warehouseId int64, fileType string, cmds []*cmd) (interface{}, error) {
+	dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
+		saveCI, _ := tx.Prepare("INSERT INTO ci(warehouseId, registryType, createTime, status) VALUES (?,?,?,?)")
+		r, _ := saveCI.Exec(warehouseId, fileType, time.Now().Unix(), true)
+		saveCmd, _ := tx.Prepare("INSERT INTO cmd(cid, context, createTime, status) VALUES (?, ?, ?)")
+		for v := range cmds {
+			saveCmd.Exec(r.LastInsertId(), v, time.Now().Unix(), true)
+		}
+		return nil, nil
+	})
+	return "APPEND SUCCESS", nil
 }
 
 /**

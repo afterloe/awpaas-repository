@@ -21,6 +21,7 @@ type cmd struct {
 	CreateTime int64
 	ModifyTime int64
 	Status bool
+	CId int64
 }
 
 func (this *ci) String() string {

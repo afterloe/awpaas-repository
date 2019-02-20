@@ -114,7 +114,11 @@ func CIDetail(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, util.Error(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, util.Success(reply))
+	ctx.Status(200)
+	ctx.Header("Content-Type", "text")
+	ctx.Header("Content-Disposition", "attachment;filename=" + string([]byte(reply["name"].(string))))
+	ctx.Header("Content-Length", string(reply["size"].(int64)))
+	ctx.File(reply["path"].(string))
 }
 
 func CIHistoryDetail(ctx *gin.Context) {

@@ -123,8 +123,27 @@ func executeHistory(cid int64, taskId, context string) {
 	})
 }
 
-func GetDetail(key string) {
-
+func GetDetail(key string) (map[string]interface{}, error){
+	p, err := dbConnect.WithQuery("SELECT context FROM ci_history WHERE taskId = ?", func(rows *sql.Rows) (interface{}, error) {
+		context := new(string)
+		rows.Next()
+		rows.Scan(&context)
+		return context, nil
+	}, key)
+	if nil != err {
+		return nil, err
+	}
+	context := p.(*string)
+	path := *context + "/report.log"
+	stat, err := os.Stat(path)
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "file has delete", Code: 404}
+	}
+	return map[string]interface{}{
+		"name": stat.Name(),
+		"size": stat.Size(),
+		"path": path,
+	}, nil
 }
 
 func CIHistoryDetail(warehouseId int64) (interface{}, error) {

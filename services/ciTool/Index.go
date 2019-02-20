@@ -123,6 +123,12 @@ func executeHistory(cid int64, taskId, context string) {
 	})
 }
 
+func CIHistoryDetail(warehouseId int64) (interface{}, error) {
+	return dbConnect.WithQuery("SELECT taskId, ci_history.createTime FROM ci_history JOIN ci ON ci.id = ci_history.cid AND ci.status = ? JOIN warehouse ON warehouse.id = ci.warehouseId AND ci.warehouseId = ?", func(rows *sql.Rows) (interface{}, error) {
+		return dbConnect.ToMap(rows)
+	}, true, warehouseId)
+}
+
 /**
 	软件构建
 

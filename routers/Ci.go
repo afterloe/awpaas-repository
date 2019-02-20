@@ -97,3 +97,18 @@ func RunCI(ctx *gin.Context) {
 func CIHistory(ctx *gin.Context) {
 
 }
+
+func CIHistoryDetail(ctx *gin.Context) {
+	key := ctx.Param("key")
+	val, err := strconv.ParseInt(key, 10, 64)
+	if nil != err {
+		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	reply, err := ciTool.CIHistoryDetail(val)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, util.Success(reply))
+}

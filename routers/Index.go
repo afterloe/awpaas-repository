@@ -42,6 +42,7 @@ func Execute(route *gin.RouterGroup) {
 	route.GET("/ci/item/:key", CmdGet) // 获取构建命令详情
 	route.POST("/ci/item/:key", RunCI) // 执行构建命令
 	route.GET("/ci/history", CIHistory) // 执行历史
+	route.GET("/ci/history/:key", CIHistoryDetail) // 详细执行历史
 	route.GET("/ci/detail/:key", ) // 查询ci执行结果
 	route.DELETE("/ci/warehouse/:key") // 删除构建命令
 

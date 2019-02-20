@@ -40,7 +40,9 @@ func Execute(route *gin.RouterGroup) {
 	route.GET("/ci/warehouse/:key", CIList) // 查询构建信息
 	route.PUT("/ci/warehouse/:key", CmdBuilder) // 创建构建命令
 	route.GET("/ci/item/:key", CmdGet) // 获取构建命令详情
-	route.POST("/ci/item/:key", RunCi) // 执行构建命令
+	route.POST("/ci/item/:key", RunCI) // 执行构建命令
+	route.GET("/ci/history", CIHistory) // 执行历史
+	route.GET("/ci/detail/:key", ) // 查询ci执行结果
 	route.DELETE("/ci/warehouse/:key") // 删除构建命令
 
 	// 镜像运行

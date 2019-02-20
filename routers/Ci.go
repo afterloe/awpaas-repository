@@ -79,7 +79,7 @@ func CmdBuilder(ctx *gin.Context) {
 /**
 	构建 - 执行构建命令
  */
-func RunCi(ctx *gin.Context) {
+func RunCI(ctx *gin.Context) {
 	key := ctx.Param("key")
 	val, err := strconv.ParseInt(key, 10, 64)
 	if nil != err {
@@ -92,4 +92,8 @@ func RunCi(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, util.Success(reply))
+}
+
+func CIHistory(ctx *gin.Context) {
+
 }

@@ -116,6 +116,13 @@ func AppendCI(warehouseId int64, fileType string, cmds []*cmd) (interface{}, err
 	return "APPEND SUCCESS", nil
 }
 
+func executeHistory(cid int64, taskId, context string) {
+	dbConnect.WithPrepare("INSERT INTO ci_history(cid, taskId, context, createTime) VALUES (?, ?, ?, ?)", func(stmt *sql.Stmt) (interface{}, error) {
+		stmt.Exec(cid, taskId, context, time.Now().Unix())
+		return nil, nil
+	})
+}
+
 /**
 	软件构建
 
@@ -129,10 +136,11 @@ func Run(ciId int64) (interface{}, error) {
 		return nil, &exceptions.Error{Msg: "no such this plain", Code: 404}
 	}
 	ci.LastCiTime = time.Now().Unix()
+	task := util.GeneratorUUID()
+	context := tmpDIR + task
+	executeHistory(ci.Id, task, context)
 	switch ci.RegistryType {
 	case "tar":
-		task := util.GeneratorUUID()
-		context := tmpDIR + task
 		go func() {
 			shell := make([]string, 0)
 			for _, v := range ci.Content {
@@ -148,7 +156,6 @@ func Run(ciId int64) (interface{}, error) {
 	case "code":
 		return nil, nil
 	case "soa-jvm":
-		task := util.GeneratorUUID()
 		w, err := warehouse.GetOne(ci.WarehouseId, "fid", "name")
 		if nil != err {
 			return nil, err
@@ -157,7 +164,6 @@ func Run(ciId int64) (interface{}, error) {
 		if nil != err {
 			return nil, err
 		}
-		context := tmpDIR + task
 		_, err = borderSystem.Copy(f.Id, context)
 		if nil != err {
 			return nil, err
@@ -165,12 +171,12 @@ func Run(ciId int64) (interface{}, error) {
 		go func() {
 			rep, _ := execShell(context, []string{
 				fmt.Sprintf("tar -xzvf %s", f.Name),
+				fmt.Sprintf("rm -rf %s", f.Name),
 				fmt.Sprintf("docker build -t %s/%s/%s:%s .", "127.0.0.1", w.Group, w.Name, w.Version),
 				fmt.Sprintf("docker push %s/%s/%s:%s", "127.0.0.1", w.Group, w.Name, w.Version),
 			}...)
 			ci.LastReport = rep.(string)
 			ci.Update()
-			os.RemoveAll(context)
 		}()
 		return nil, nil
 	default:

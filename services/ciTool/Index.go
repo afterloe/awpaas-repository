@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	selectCISQL = "SELECT id, registryType, lastReport, lastCITime FROM ci WHERE status = ? AND id = ? ORDER BY createTime DESC"
+	selectCISQL = "SELECT id, registryType, lastReport, lastCITime, status FROM ci WHERE status = ? AND id = ? ORDER BY createTime DESC"
 	selectCMDSQL = "SELECT id,context FROM cmd WHERE status = ? AND cid = ? ORDER BY createTime DESC"
 	updateCISQL = "UPDATE ci SET registryType = ?, lastReport = ?, lastCITime = ?, status = ? WHERE id = ?"
 	tmpDIR = "/tmp/download/"
@@ -70,8 +70,12 @@ func GetOne(id int64) (*ci, error) {
 		ciInfo, _ := tx.Prepare(selectCISQL)
 		rows, _ := ciInfo.Query(true, id)
 		target := new(ci)
+		flag := new(int64)
 		for rows.Next() {
-			rows.Scan(&target.Id, &target.RegistryType, &target.LastReport, &target.LastCiTime)
+			rows.Scan(&target.Id, &target.RegistryType, &target.LastReport, &target.LastCiTime, &flag)
+			if 1 == *flag {
+				target.Status = true
+			}
 		}
 		if 0 == target.Id {
 			return target, &exceptions.Error{Msg: "no such this warehouse", Code: 404}

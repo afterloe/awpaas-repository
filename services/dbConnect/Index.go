@@ -85,6 +85,10 @@ func (this *sqlStr) Query(args ...interface{}) ([]map[string]interface{}, error)
 	if nil != err {
 		return nil, &exceptions.Error{Msg: "execute query fail. please check", Code: 400}
 	}
+	return ToMap(rows)
+}
+
+func ToMap(rows *sql.Rows) ([]map[string]interface{}, error){
 	cols, _ := rows.Columns()
 	result := make([]map[string]interface{}, 0)
 	columns := make([]interface{}, len(cols))

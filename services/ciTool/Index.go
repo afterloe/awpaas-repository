@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	selectCISQL = "SELECT id, registryType, lastReport, lastCITime FROM ci WHERE status = ? AND id = ? ORDER BY createTime DESC"
+	selectCISQL = "SELECT id, registryType, lastReport, lastCITime, status FROM ci WHERE status = ? AND id = ? ORDER BY createTime DESC"
 	selectCMDSQL = "SELECT id,context FROM cmd WHERE status = ? AND cid = ? ORDER BY createTime DESC"
 	updateCISQL = "UPDATE ci SET registryType = ?, lastReport = ?, lastCITime = ?, status = ? WHERE id = ?"
 	tmpDIR = "/tmp/download/"
@@ -70,8 +70,12 @@ func GetOne(id int64) (*ci, error) {
 		ciInfo, _ := tx.Prepare(selectCISQL)
 		rows, _ := ciInfo.Query(true, id)
 		target := new(ci)
+		flag := new(int64)
 		for rows.Next() {
-			rows.Scan(&target.Id, &target.RegistryType, &target.LastReport, &target.LastCiTime)
+			rows.Scan(&target.Id, &target.RegistryType, &target.LastReport, &target.LastCiTime, &flag)
+			if 1 == *flag {
+				target.Status = true
+			}
 		}
 		if 0 == target.Id {
 			return target, &exceptions.Error{Msg: "no such this warehouse", Code: 404}
@@ -112,6 +116,48 @@ func AppendCI(warehouseId int64, fileType string, cmds []*cmd) (interface{}, err
 	return "APPEND SUCCESS", nil
 }
 
+func executeHistory(cid int64, taskId, context string) {
+	dbConnect.WithPrepare("INSERT INTO ci_history(cid, taskId, context, createTime) VALUES (?, ?, ?, ?)", func(stmt *sql.Stmt) (interface{}, error) {
+		stmt.Exec(cid, taskId, context, time.Now().Unix())
+		return nil, nil
+	})
+}
+
+func GetDetail(key string) (map[string]interface{}, error){
+	p, err := dbConnect.WithQuery("SELECT context FROM ci_history WHERE taskId = ?", func(rows *sql.Rows) (interface{}, error) {
+		context := new(string)
+		rows.Next()
+		rows.Scan(&context)
+		return context, nil
+	}, key)
+	if nil != err {
+		return nil, err
+	}
+	context := p.(*string)
+	path := *context + "/report.log"
+	stat, err := os.Stat(path)
+	if nil != err {
+		return nil, &exceptions.Error{Msg: "file has delete", Code: 404}
+	}
+	return map[string]interface{}{
+		"name": stat.Name(),
+		"size": stat.Size(),
+		"path": path,
+	}, nil
+}
+
+func CIHistoryDetail(warehouseId int64) (interface{}, error) {
+	return dbConnect.WithQuery("SELECT taskId, ci_history.createTime FROM ci_history JOIN ci ON ci.id = ci_history.cid AND ci.status = ? JOIN warehouse ON warehouse.id = ci.warehouseId AND ci.warehouseId = ?", func(rows *sql.Rows) (interface{}, error) {
+		return dbConnect.ToMap(rows)
+	}, true, warehouseId)
+}
+
+func History(begin, limit int) (interface{}, error) {
+	return dbConnect.WithQuery("SELECT warehouse.name, warehouse.\"group\", warehouse.version, ci.id AS cid, ci_history.id AS hid, ci_history.taskId, ci_history.createTime FROM warehouse JOIN ci ON ci.warehouseId = warehouse.id AND ci.status = ? JOIN ci_history ON ci_history.cid = ci.id  LIMIT ? OFFSET ?", func(rows *sql.Rows) (interface{}, error) {
+		return dbConnect.ToMap(rows)
+	}, true, limit, begin)
+}
+
 /**
 	软件构建
 
@@ -125,10 +171,11 @@ func Run(ciId int64) (interface{}, error) {
 		return nil, &exceptions.Error{Msg: "no such this plain", Code: 404}
 	}
 	ci.LastCiTime = time.Now().Unix()
+	task := util.GeneratorUUID()
+	context := tmpDIR + task
+	executeHistory(ci.Id, task, context)
 	switch ci.RegistryType {
 	case "tar":
-		task := util.GeneratorUUID()
-		context := tmpDIR + task
 		go func() {
 			shell := make([]string, 0)
 			for _, v := range ci.Content {
@@ -144,7 +191,6 @@ func Run(ciId int64) (interface{}, error) {
 	case "code":
 		return nil, nil
 	case "soa-jvm":
-		task := util.GeneratorUUID()
 		w, err := warehouse.GetOne(ci.WarehouseId, "fid", "name")
 		if nil != err {
 			return nil, err
@@ -153,7 +199,6 @@ func Run(ciId int64) (interface{}, error) {
 		if nil != err {
 			return nil, err
 		}
-		context := tmpDIR + task
 		_, err = borderSystem.Copy(f.Id, context)
 		if nil != err {
 			return nil, err
@@ -161,12 +206,12 @@ func Run(ciId int64) (interface{}, error) {
 		go func() {
 			rep, _ := execShell(context, []string{
 				fmt.Sprintf("tar -xzvf %s", f.Name),
+				fmt.Sprintf("rm -rf %s", f.Name),
 				fmt.Sprintf("docker build -t %s/%s/%s:%s .", "127.0.0.1", w.Group, w.Name, w.Version),
 				fmt.Sprintf("docker push %s/%s/%s:%s", "127.0.0.1", w.Group, w.Name, w.Version),
 			}...)
 			ci.LastReport = rep.(string)
 			ci.Update()
-			os.RemoveAll(context)
 		}()
 		return nil, nil
 	default:

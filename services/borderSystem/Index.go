@@ -137,11 +137,11 @@ func GetOne(key int64, fields ...string) (*fsFile, error) {
 		}
 		return target, nil
 	}, key, true)
-	f := one.(fsFile)
+	f := one.(*fsFile)
 	if 0 == f.Id {
 		return nil, &exceptions.Error{Msg: "no such this file", Code: 404}
 	}
-	return &f, err
+	return f, err
 }
 
 func Copy(key int64, where ...string) (interface{}, error) {

@@ -68,9 +68,9 @@ func (this *sqlStr) Preview() string {
 	if 0 != len(this.andConditions) {
 		baseSQL = fmt.Sprintf("%s WHERE %s", baseSQL, strings.Join(this.andConditions, " AND "))
 	}
-	//if "" != this.orderBy {
-	//	baseSQL += fmt.Sprintf(" ORDER BY %s ", this.orderBy)
-	//}
+	if "" != this.orderBy {
+		baseSQL += fmt.Sprintf(" ORDER BY %s ", this.orderBy)
+	}
 	if "" != this.pageCondition {
 		baseSQL += this.pageCondition
 	}

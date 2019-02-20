@@ -27,7 +27,7 @@ func Execute(route *gin.RouterGroup) {
 
 	// 镜像管理
 	route.PUT("/warehouse", WarehouseAppend) //镜像创建
-	route.GET("/warehouse", WarehouseList) // 镜像管理 - 镜像查询
+	route.GET("/warehouse", WarehouseList) // 镜像查询
 	route.POST("/warehouse", WarehouseModify) // 镜像管理 - 镜像信息修改
 	route.GET("/warehouse/:key", WarehouseOne) // 镜像管理 - 查看详情
 	route.DELETE("/warehouse/:key", WarehouseDel) // 镜像管理 - 镜像删除

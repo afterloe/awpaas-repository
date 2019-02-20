@@ -66,7 +66,7 @@ func Default() *warehouse {
 */
 func GetList(begin, limit int) []map[string]interface{} {
 	reply, err := dbConnect.Select("warehouse").
-		Fields("id", "name", "uploadTime", "group").
+		Fields("id", "name", "uploadTime", "\"group\"").
 		AND("status = ?").Page(begin, limit).Query(true)
 	if nil != err {
 		return nil

@@ -9,6 +9,7 @@ import (
 	"os"
 	"fmt"
 	"strings"
+	"reflect"
 )
 
 var (
@@ -71,6 +72,7 @@ func (this *sqlStr) Preview() string {
 func (this *sqlStr) Query(args ...interface{}) ([]map[string]interface{}, error) {
 	conn := getConnection()
 	defer conn.Close()
+	logger.Logger("db-conn", this.Preview())
 	rows, err := conn.Query(this.Preview(), args...)
 	if nil != err {
 		return nil, &exceptions.Error{Msg: "execute query fail. please check", Code: 400}
@@ -86,15 +88,18 @@ func (this *sqlStr) Query(args ...interface{}) ([]map[string]interface{}, error)
 		if err := rows.Scan(columnPointers...); err != nil {
 			return nil, &exceptions.Error{Msg: err.Error(), Code: 500}
 		}
-
 		m := make(map[string]interface{})
 		for i, colName := range cols {
 			val := columnPointers[i].(*interface{})
-			m[colName] = *val
+			t := reflect.TypeOf(*val)
+			if "[]uint8" == t.String() {
+				m[colName] = string((*val).([]uint8))
+			} else {
+				m[colName] = *val
+			}
 		}
 		result = append(result, m)
 	}
-
 	return result, nil
 }
 

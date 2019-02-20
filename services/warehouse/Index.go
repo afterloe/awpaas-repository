@@ -30,9 +30,11 @@ func (this *warehouse) SaveToDB() (interface{}, error) {
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(this.FId, this.Name, this.Group, this.Remarks, this.Version, this.UploadTime, this.ModifyTime, this.Status)
+		result, _ := stmt.Exec(this.FId, this.Name, this.Group, this.Remarks, this.Version, this.UploadTime, this.ModifyTime, this.Status)
+		id, _ := result.LastInsertId()
+		this.Id = id
 		logger.Logger("warehouse", "insert success")
-		return map[string]interface{}{}, nil
+		return this, nil
 	})
 }
 

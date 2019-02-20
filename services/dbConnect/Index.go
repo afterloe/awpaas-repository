@@ -105,6 +105,7 @@ func ping() {
 		logger.Logger("db-sdk", "get Connection failed")
 		os.Exit(100)
 	}
+	logger.Logger("db-sdk", "connection is ready")
 }
 
 func getConnection() *sql.DB {

@@ -123,10 +123,20 @@ func executeHistory(cid int64, taskId, context string) {
 	})
 }
 
+func GetDetail(key string) {
+
+}
+
 func CIHistoryDetail(warehouseId int64) (interface{}, error) {
 	return dbConnect.WithQuery("SELECT taskId, ci_history.createTime FROM ci_history JOIN ci ON ci.id = ci_history.cid AND ci.status = ? JOIN warehouse ON warehouse.id = ci.warehouseId AND ci.warehouseId = ?", func(rows *sql.Rows) (interface{}, error) {
 		return dbConnect.ToMap(rows)
 	}, true, warehouseId)
+}
+
+func History(begin, limit int) (interface{}, error) {
+	return dbConnect.WithQuery("SELECT warehouse.name, warehouse.\"group\", warehouse.version, ci.id AS cid, ci_history.id AS hid, ci_history.taskId, ci_history.createTime FROM warehouse JOIN ci ON ci.warehouseId = warehouse.id AND ci.status = ? JOIN ci_history ON ci_history.cid = ci.id  LIMIT ? OFFSET ?", func(rows *sql.Rows) (interface{}, error) {
+		return dbConnect.ToMap(rows)
+	}, true, limit, begin)
 }
 
 /**

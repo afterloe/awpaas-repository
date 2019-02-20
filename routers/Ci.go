@@ -95,7 +95,26 @@ func RunCI(ctx *gin.Context) {
 }
 
 func CIHistory(ctx *gin.Context) {
+	reply, err := ciTool.History(pageCondition(ctx))
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, util.Success(reply))
+}
 
+func CIDetail(ctx *gin.Context) {
+	key := ctx.Param("key")
+	if 32 != len(key) {
+		ctx.JSON(http.StatusBadRequest, util.Fail(400, "参数错误"))
+		return
+	}
+	reply, err := ciTool.GetDetail(key)
+	if nil != err {
+		ctx.JSON(http.StatusInternalServerError, util.Error(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, util.Success(reply))
 }
 
 func CIHistoryDetail(ctx *gin.Context) {

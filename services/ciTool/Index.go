@@ -62,7 +62,7 @@ func CIList(id int64) (interface{}, error) {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
 	return dbConnect.Select("ci").Fields("id", "registryType", "lastReport", "lastCITime", "createTime").
-		AND("warehouseId = ?", "status = ?").Query(id, true)
+		AND("warehouseId = ?", "status = ?").OrderBy("createTime desc").Query(id, true)
 }
 
 func GetOne(id int64) (*ci, error) {

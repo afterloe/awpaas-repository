@@ -175,6 +175,7 @@ func Run(ciId int64) (interface{}, error) {
 }
 
 func execShell(dir string, args ...string) (interface{}, error) {
+	os.MkdirAll(dir, os.ModePerm)
 	sh, err := os.Create(dir + "/cmd.sh")
 	if nil != err {
 		return nil, &exceptions.Error{Msg: "create file error", Code: 500}

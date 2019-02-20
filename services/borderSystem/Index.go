@@ -51,9 +51,11 @@ func (this *fsFile) SaveToDB(rev ...bool) (interface{}, error){
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(this.Name, this.SavePath, this.ContentType, this.Key, this.UploadTime, this.Size, this.Status, this.ModifyTime)
+		result, _ := stmt.Exec(this.Name, this.SavePath, this.ContentType, this.Key, this.UploadTime, this.Size, this.Status, this.ModifyTime)
+		fid, _ := result.LastInsertId()
 		logger.Logger("borderSystem", "insert success")
-		return map[string]interface{}{}, nil
+		this.Id = fid
+		return this, nil
 	})
 }
 

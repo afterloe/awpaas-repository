@@ -36,7 +36,7 @@ func GetRegistryType() interface{} {
 }
 
 func DefaultCmd(id int64, inputType string, content ...string) ([]*cmd, error) {
-	_, err := warehouse.GetOne(id, "id")
+	_, err := warehouse.GetOne(id)
 	if nil != err {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
@@ -57,7 +57,7 @@ func DefaultCmd(id int64, inputType string, content ...string) ([]*cmd, error) {
 }
 
 func CIList(id int64) (interface{}, error) {
-	_, err := warehouse.GetOne(id, "id")
+	_, err := warehouse.GetOne(id)
 	if nil != err {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
@@ -97,10 +97,15 @@ func AppendCI(warehouseId int64, fileType string, cmds []*cmd) (interface{}, err
 	dbConnect.WithTransaction(func(tx *sql.Tx) (interface{}, error) {
 		saveCI, _ := tx.Prepare("INSERT INTO ci(warehouseId, registryType, createTime, status) VALUES (?,?,?,?)")
 		r, _ := saveCI.Exec(warehouseId, fileType, time.Now().Unix(), true)
-		saveCmd, _ := tx.Prepare("INSERT INTO cmd(cid, context, createTime, status) VALUES (?, ?, ?)")
+		saveCmd, _ := tx.Prepare("INSERT INTO cmd(cid, context, createTime, status) VALUES (?, ?, ?, ?)")
 		lastId, _ := r.LastInsertId()
-		for v := range cmds {
-			saveCmd.Exec(lastId, v, time.Now().Unix(), true)
+		for _, v := range cmds {
+			context := v.Context
+			_, err := saveCmd.Exec(lastId, context, time.Now().Unix(), true)
+			if nil != err {
+				fmt.Println(err)
+				tx.Rollback()
+			}
 		}
 		return nil, nil
 	})

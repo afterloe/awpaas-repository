@@ -15,7 +15,7 @@ import (
 
 const (
 	selectCISQL = "SELECT id, registryType, lastReport, lastCITime FROM ci WHERE status = ? AND id = ? ORDER BY createTime DESC"
-	selectCMDSQL = "SELECT id,context FROM cmd WHERE status = ? AND cid = ? ORDER BY id AES"
+	selectCMDSQL = "SELECT id,context FROM cmd WHERE status = ? AND cid = ? ORDER BY createTime DESC"
 	updateCISQL = "UPDATE ci SET registryType = ?, lastReport = ?, lastCITime = ?, status = ? WHERE id = ?"
 	tmpDIR = "/tmp/download/"
 )

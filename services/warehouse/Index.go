@@ -66,7 +66,7 @@ func Default() *warehouse {
 */
 func GetList(begin, limit int) []map[string]interface{} {
 	reply, err := dbConnect.Select("warehouse").
-		Fields("id", "name", "uploadTime", "\"group\"").
+		Fields("id", "name", "uploadTime", "version", "\"group\"").
 		AND("status = ?").Page(begin, limit).Query(true)
 	if nil != err {
 		return nil
@@ -105,7 +105,7 @@ func Update(args, old *warehouse) (interface{}, error) {
 	查询包详细信息
 */
 func GetOne(key int64, fields ...string) (*warehouse, error) {
-	str := dbConnect.Select("file")
+	str := dbConnect.Select("warehouse")
 	if 0 == len(fields) {
 		str.Fields("id, name, \"group\", remarks, version, uploadTime, modifyTime, status")
 	} else {
@@ -114,14 +114,21 @@ func GetOne(key int64, fields ...string) (*warehouse, error) {
 	str.AND("id = ?", "status = ?")
 	one, err := dbConnect.WithQuery(str.Preview(), func(rows *sql.Rows) (interface{}, error) {
 		target := new(warehouse)
+		flag := new(int64)
 		for rows.Next() {
-			rows.Scan(&target.Id, &target.Name, &target.Group, &target.Remarks, &target.Version, &target.UploadTime, &target.ModifyTime, &target.Status)
+			rows.Scan(&target.Id, &target.Name, &target.Group, &target.Remarks, &target.Version, &target.UploadTime, &target.ModifyTime, &flag)
+			if 1 == *flag {
+				target.Status = true
+			}
 		}
 		return target, nil
 	}, key, true)
-	w := one.(warehouse)
+	if nil != err {
+		return nil, err
+	}
+	w := one.(*warehouse)
 	if 0 == w.Id {
 		return nil, &exceptions.Error{Msg: "no such this package", Code: 404}
 	}
-	return &w, err
+	return w, err
 }

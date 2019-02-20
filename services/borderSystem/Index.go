@@ -132,11 +132,18 @@ func GetOne(key int64, fields ...string) (*fsFile, error) {
 	str.AND("id = ?", "status = ?")
 	one, err := dbConnect.WithQuery(str.Preview(), func(rows *sql.Rows) (interface{}, error) {
 		target := new(fsFile)
+		flag := new(int64)
 		for rows.Next() {
-			rows.Scan(&target.Id, &target.Name, &target.SavePath,&target.ContentType,&target.Key,&target.UploadTime,&target.Size,&target.Status,&target.ModifyTime)
+			rows.Scan(&target.Id, &target.Name, &target.SavePath, &target.ContentType, &target.Key, &target.UploadTime, &target.Size, &flag, &target.ModifyTime)
+			if 1 == *flag {
+				target.Status = true
+			}
 		}
 		return target, nil
 	}, key, true)
+	if nil != err {
+		return nil, err
+	}
 	f := one.(*fsFile)
 	if 0 == f.Id {
 		return nil, &exceptions.Error{Msg: "no such this file", Code: 404}

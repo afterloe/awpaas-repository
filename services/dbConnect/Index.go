@@ -125,8 +125,16 @@ func getConnection() *sql.DB {
 func WithQuery(sql string, callback func(rows *sql.Rows) (interface{}, error) , args ...interface{}) (interface{}, error) {
 	conn := getConnection()
 	defer conn.Close()
-	stmt, _ := conn.Prepare(sql)
-	rows, _ := stmt.Query(args...)
+	stmt, err := conn.Prepare(sql)
+	if nil != err {
+		logger.Error("db-sdk", sql)
+		return nil, &exceptions.Error{Msg: err.Error(), Code: 400}
+	}
+	logger.Logger("db-sdk", sql)
+	rows, err := stmt.Query(args...)
+	if nil != err {
+		return nil, &exceptions.Error{Msg: err.Error(), Code: 400}
+	}
 	defer stmt.Close()
 	return callback(rows)
 }

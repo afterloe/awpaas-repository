@@ -107,7 +107,7 @@ func Update(args, old *warehouse) (interface{}, error) {
 func GetOne(key int64, fields ...string) (*warehouse, error) {
 	str := dbConnect.Select("warehouse")
 	if 0 == len(fields) {
-		str.Fields("id, name, \"group\", remarks, version, uploadTime, modifyTime, status")
+		str.Fields("id, name, \"group\", remarks, version, uploadTime, modifyTime, status, fid")
 	} else {
 		str.Fields(fields...)
 	}
@@ -116,7 +116,7 @@ func GetOne(key int64, fields ...string) (*warehouse, error) {
 		target := new(warehouse)
 		flag := new(int64)
 		for rows.Next() {
-			rows.Scan(&target.Id, &target.Name, &target.Group, &target.Remarks, &target.Version, &target.UploadTime, &target.ModifyTime, &flag)
+			rows.Scan(&target.Id, &target.Name, &target.Group, &target.Remarks, &target.Version, &target.UploadTime, &target.ModifyTime, &flag, &target.FId)
 			if 1 == *flag {
 				target.Status = true
 			}

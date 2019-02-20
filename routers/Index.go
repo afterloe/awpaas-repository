@@ -13,17 +13,21 @@ import (
  */
 func Execute(route *gin.RouterGroup) {
 
-	// 上传镜像
+	// 文件管理
 	route.PUT("/file", FsUpload) // 文件上传
-	route.GET("/download/:key", FsDownload) // 下载
+	route.DELETE("/file") // 文件删除
+	route.GET("/file") // 文件详情
+	route.GET("/file/list") // 已上传文件列表
+	route.GET("/file/download/:key", FsDownload) // 文件下载
 
-	route.GET("/remote/repository", RemoteList) // 远程 - 镜像列表
-	route.GET("/remote/repository/:name/version") // 远程 - 指定镜像版本列表
-	route.GET("/remote/detail/:name/:version") // 远程 - 镜像详情
+	// 远程管理
+	route.GET("/remote/repository", RemoteList) // 获取远程镜像列表
+	route.GET("/remote/repository/:name/version") // 获取远程指定镜像版本列表
+	route.GET("/remote/detail/:name/:version") // 获取远程指定镜像详情
 
 	// 镜像管理
-	route.GET("/warehouse", WarehouseList) // 镜像管理 - 镜像查询
-	route.PUT("/warehouse", WarehouseAppend) // 镜像管理 - 镜像创建
+	route.PUT("/warehouse", WarehouseAppend) //镜像创建
+	route.GET("/warehouse", WarehouseList) // 镜像查询
 	route.POST("/warehouse", WarehouseModify) // 镜像管理 - 镜像信息修改
 	route.GET("/warehouse/:key", WarehouseOne) // 镜像管理 - 查看详情
 	route.DELETE("/warehouse/:key", WarehouseDel) // 镜像管理 - 镜像删除
@@ -33,10 +37,10 @@ func Execute(route *gin.RouterGroup) {
 	route.GET("/dictionaries/ci", CmdList) // 构建类型列表
 
 	// 构建
-	route.GET("/ci/item/:key", CmdGet) // 获取构建命令详情
-	route.POST("/ci/item/:key", RunCi) // 执行构建命令
 	route.GET("/ci/warehouse/:key", CIList) // 查询构建信息
 	route.PUT("/ci/warehouse/:key", CmdBuilder) // 创建构建命令
+	route.GET("/ci/item/:key", CmdGet) // 获取构建命令详情
+	route.POST("/ci/item/:key", RunCi) // 执行构建命令
 	route.DELETE("/ci/warehouse/:key") // 删除构建命令
 
 	// 镜像运行

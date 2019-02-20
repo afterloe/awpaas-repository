@@ -51,9 +51,11 @@ func (this *fsFile) SaveToDB(rev ...bool) (interface{}, error){
 		if nil != err {
 			return nil, &exceptions.Error{Msg: "db stmt open failed.", Code: 500}
 		}
-		stmt.Exec(this.Name, this.SavePath, this.ContentType, this.Key, this.UploadTime, this.Size, this.Status, this.ModifyTime)
+		result, _ := stmt.Exec(this.Name, this.SavePath, this.ContentType, this.Key, this.UploadTime, this.Size, this.Status, this.ModifyTime)
+		fid, _ := result.LastInsertId()
 		logger.Logger("borderSystem", "insert success")
-		return map[string]interface{}{}, nil
+		this.Id = fid
+		return this, nil
 	})
 }
 
@@ -130,16 +132,23 @@ func GetOne(key int64, fields ...string) (*fsFile, error) {
 	str.AND("id = ?", "status = ?")
 	one, err := dbConnect.WithQuery(str.Preview(), func(rows *sql.Rows) (interface{}, error) {
 		target := new(fsFile)
+		flag := new(int64)
 		for rows.Next() {
-			rows.Scan(&target.Id, &target.Name, &target.SavePath,&target.ContentType,&target.Key,&target.UploadTime,&target.Size,&target.Status,&target.ModifyTime)
+			rows.Scan(&target.Id, &target.Name, &target.SavePath, &target.ContentType, &target.Key, &target.UploadTime, &target.Size, &flag, &target.ModifyTime)
+			if 1 == *flag {
+				target.Status = true
+			}
 		}
 		return target, nil
 	}, key, true)
-	f := one.(fsFile)
+	if nil != err {
+		return nil, err
+	}
+	f := one.(*fsFile)
 	if 0 == f.Id {
 		return nil, &exceptions.Error{Msg: "no such this file", Code: 404}
 	}
-	return &f, err
+	return f, err
 }
 
 func Copy(key int64, where ...string) (interface{}, error) {

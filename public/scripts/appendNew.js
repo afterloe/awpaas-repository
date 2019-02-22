@@ -3,34 +3,65 @@
 class UploadFile extends React.Component {
     constructor(props) {
         super(props);
+        this.selectFile = this.selectFile.bind(this);
+        this.state = {}
+    }
+
+    selectFile(event) {
+        const content = event.currentTarget;
+        if (0 != content.files.length) {
+            let file = content.files[0];
+            this.setState({uploadFile: file, topic: `已选择：${file.name}`});
+        }
+    }
+
+    loadSelectFileInfo({lastModified, name = "", size, type}) {
+        if ("" === name) {
+            return (
+                <div className="custom-file show">
+                    <p className={"text-primary"}>请选择镜像文件</p>
+                </div>
+            )
+        }
+        return (
+            <div className="custom-file show">
+                <div className="info">
+                    <div className={"row"}>
+                        <span className={"col"}>文件名:</span>
+                        <span className={"col val"}>{name}</span>
+                    </div>
+                    <div className={"row"}>
+                        <span className={"col"}>文件大小:</span>
+                        <span className={"col val"}>{size / 1000} kb</span>
+                    </div>
+                    <div className={"row"}>
+                        <span className={"col"}>文件类型:</span>
+                        <span className={"col val"}>{type}</span>
+                    </div>
+                    <div className={"row"}>
+                        <span className={"col"}>修改日期:</span>
+                        <span className={"col val"}>{getLocalTime(lastModified)}</span>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     render() {
-        return (<div>
-            <div className="custom-file">
-                <input type="file" className="custom-file-input" id="customFile" />
-                <label className="custom-file-label" htmlFor="customFile">选择镜像文件</label>
-            </div>
-            <div className="custom-file">
-                <div>item: xxx</div>
-                <div>item: xxx</div>
-                <div>item: xxx</div>
-                <div>item: xxx</div>
-            </div>
-            <div className="position-absolute nlv" onClick={this.props.nextPage}>
-                <div className={"float-right"}>
-                                <span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round" className="feather feather-chevrons-right">
-                                        <polyline points="13 17 18 12 13 7"></polyline>
-                                        <polyline points="6 17 11 12 6 7"></polyline>
-                                    </svg>
-                                </span>
-                    <span>下一步</span>
+        const {uploadFile = {}, topic = "选择镜像文件"} = this.state;
+        return (
+            <div className={"view col-7"}>
+                <div className="custom-file">
+                    <input type="file" className="custom-file-input" onChange={this.selectFile} />
+                    <label className="custom-file-label" htmlFor="customFile">{topic}</label>
                 </div>
-            </div>
-        </div>)
+                {this.loadSelectFileInfo(uploadFile)}
+                <div className={"custom-file"}>
+                    <button type="button" className="btn btn-primary btn-lg btn-block" onClick={this.props.nextPage}>
+                        下一步
+                    </button>
+                </div>
+            </div>)
     }
 }
 

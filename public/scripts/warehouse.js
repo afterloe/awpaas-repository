@@ -138,11 +138,15 @@ class Warehouse extends React.Component {
 
     renderList(list = []) {
         return list.map(it => (
-            <div className="media text-muted pt-3">
+            <div className="media text-muted pt-3 item">
                 <div className="media-body pb-3 mb-0 small lh-125 border-bottom border-gray">
                     <div className="d-flex justify-content-between align-items-center w-100">
-                        <strong className="text-gray-dark">{it}</strong>
+                        <strong className="text-gray-dark">{it.name}</strong>
                         <span>
+                            <span className="cont-btn" onClick={this.detail}>
+                                <embed src="images/repeat.svg" width="16" height="16" type="image/svg+xml"/>
+                                <span>更新</span>
+                            </span>
                             <span className="cont-btn" onClick={this.editItem}>
                                 <embed src="images/edit.svg" width="16" height="16" type="image/svg+xml"/>
                                 <span>修改</span>
@@ -153,6 +157,11 @@ class Warehouse extends React.Component {
                             </span>
                         </span>
                     </div>
+                    <span className="d-block">
+                        <span>group: {it.group} </span>
+                        <span>version: {it.version} </span>
+                        <span>uploadTime: {getLocalTime(it.uploadTime)}</span>
+                    </span>
                 </div>
             </div>
         ));
@@ -164,7 +173,7 @@ class Warehouse extends React.Component {
             <main role="main" className="col-md-9 ml-sm-auto col-lg-10 px-4">
                 <div
                     className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 className="h2">镜像仓库</h1>
+                    <h1 className="h2">本地镜像</h1>
                 </div>
                 {this.renderMsgAlert(msg)}
                 <div class="my-3 p-3 bg-white rounded shadow-sm m-cent">
@@ -184,56 +193,43 @@ class Warehouse extends React.Component {
                         </small>
                     </h6>
                     {this.renderList(list)}
-                    <div className="media text-muted pt-3 item">
-                        <div className="media-body pb-3 mb-0 small lh-125 border-bottom border-gray">
-                            <div className="d-flex justify-content-between align-items-center w-100">
-                                <strong className="text-gray-dark">"ss</strong>
-                                <span>
-                                    <span className="cont-btn" onClick={this.detail}>
-                                        <embed src="images/repeat.svg" width="16" height="16" type="image/svg+xml"/>
-                                        <span>更新</span>
-                                    </span>
-                                    <span className="cont-btn" onClick={this.editItem}>
-                                        <embed src="images/edit.svg" width="16" height="16" type="image/svg+xml"/>
-                                        <span>修改</span>
-                                    </span>
-                                    <span className="cont-btn" onClick={this.deleteItem}>
-                                        <embed src="images/trash.svg" width="16" height="16" type="image/svg+xml"/>
-                                        <span>删除</span>
-                                    </span>
-                                </span>
-                            </div>
-                            <span className="d-block">未携带请求头的链接进行自动拦截</span>
-                        </div>
-                    </div>
-
                     <div className="media text-muted pt-3">
-                        <div className={"media-body pb-3 mb-0 small lh-125 border-bottom border-gray"}>
-                            <div className="d-flex justify-content-between align-items-center w-100">
-                                <strong className="text-gray-dark"></strong>
-                                <nav aria-label="Page navigation example">
-                                    <ul className="pagination">
-                                        <li className="page-item">
-                                            <a className="page-link" href="#" aria-label="Previous">
-                                                <span aria-hidden="true">&laquo;</span>
-                                            </a>
-                                        </li>
-                                        <li className="page-item"><a className="page-link" href="#">1</a></li>
-                                        <li className="page-item"><a className="page-link" href="#">2</a></li>
-                                        <li className="page-item"><a className="page-link" href="#">3</a></li>
-                                        <li className="page-item">
-                                            <a className="page-link" href="#" aria-label="Next">
-                                                <span aria-hidden="true">&raquo;</span>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
+                       <Page />
                     </div>
                 </div>
                 <div id="modal"></div>
             </main>
         );
+    }
+}
+
+class Page extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        return (
+            <div className={"media-body pb-3 mb-0 small lh-125 border-bottom border-gray"}>
+                <div className="d-flex justify-content-between align-items-center w-100">
+                    <strong className="text-gray-dark"></strong>
+                    <nav aria-label="Page navigation example">
+                        <ul className="pagination">
+                            <li className="page-item disabled">
+                                <a className="page-link" href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li className="page-item active"><a className="page-link" href="#">1</a></li>
+                            <li className="page-item disabled">
+                                <a className="page-link" href="#" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        )
     }
 }

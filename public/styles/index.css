@@ -10,6 +10,10 @@
 .cont-btn:hover { cursor: pointer; color: #007bff; }
 .cont-btn embed { margin-right: 4px; color: #999; width: 16px; height: 16px; vertical-align: text-bottom; }
 .cont-btn embed:hover {cursor: pointer; }
+.media-body .text-gray-dark { margin-left: 8px; font-size: 15px; }
+.media-body .d-block { margin-left: 8px; }
+.media-body .d-block span:after { content: " | "}
+.media-body .d-block span:last-child:after { content: ""}
 .modal-body .label { margin-bottom: 10px; }
 .alert { position: absolute; right: 20px; }
 .media.text-muted.pt-3.item:hover { background-color: #343a400d; border-radius: 5px; }

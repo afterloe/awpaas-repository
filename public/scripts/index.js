@@ -6,7 +6,7 @@ const systemMenu = [{
     isClick: true,
     index: "main"
 }, {
-    name: "镜像仓库",
+    name: "本地镜像",
     icon: "images/layers.svg",
     index: "warehouse"
 }, {

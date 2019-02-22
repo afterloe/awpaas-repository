@@ -37,4 +37,4 @@ class Header extends React.Component {
     }
 }
 
-ReactDOM.render(<Header name="镜像管理" version="v1.0.0"/>, document.getElementById("head"));
+ReactDOM.render(<Header name="统一管理" version="v1.1.3"/>, document.getElementById("head"));

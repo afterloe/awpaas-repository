@@ -6,6 +6,8 @@ const jsonToQueryStr = data => {
     return item.join("&");
 };
 
+const getLocalTime = nS => new Date(parseInt(nS) * 1000).toLocaleString().replace(/:\d{1,2}$/,' ');
+
 const newToRemote = (data, path) => new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.timeout = 15 * 1000;

@@ -71,21 +71,19 @@ class PerfectInfo extends React.Component {
     }
 
     render() {
-        return (<div>
-            <div className="custom-file">
-                <form className="col-lg-8">
+        return (
+            <div className={"view col-7"}>
+                <form className="custom-file show">
                     <div className="form-group row">
                         <label htmlFor="staticEmail" className="col-sm-2 col-form-label">FID</label>
                         <div className="col-sm-10">
-                            <input type="text" readOnly className="form-control-plaintext" id="staticEmail"
-                                   value="email@example.com" />
+                            <input type="text" readOnly className="form-control-plaintext" value="email@example.com" />
                         </div>
                     </div>
                     <div className="form-group row">
                         <label htmlFor="inputPassword" className="col-sm-2 col-form-label">Name</label>
                         <div className="col-sm-10">
-                            <input type="text" className="form-control" id="inputPassword"
-                                   placeholder="Password" />
+                            <input type="text" className="form-control" placeholder="image name" />
                         </div>
                     </div>
                     <div className="form-group row">
@@ -103,43 +101,25 @@ class PerfectInfo extends React.Component {
                     <div className="form-group row">
                         <label htmlFor="inputPassword" className="col-sm-2 col-form-label">Version</label>
                         <div className="col-sm-10">
-                            <input type="text" className="form-control" id="inputPassword"
-                                   placeholder="Password" />
+                            <input type="text" className="form-control" placeholder="image version" />
                         </div>
                     </div>
                     <div className="form-group row">
                         <label htmlFor="inputPassword" className="col-sm-2 col-form-label">Remarks</label>
                         <div className="col-sm-10">
-                            <textarea className="form-control" id="exampleFormControlTextarea1"
-                                      rows="3"></textarea>
+                            <textarea className="form-control" rows="3"></textarea>
                         </div>
                     </div>
                 </form>
-            </div>
-            <div className="position-absolute nlv">
-                <div className={"float-right"} onClick={this.props.nextPage}>
-                    <span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                             stroke-linejoin="round" className="feather feather-chevrons-right">
-                            <polyline points="13 17 18 12 13 7"></polyline>
-                            <polyline points="6 17 11 12 6 7"></polyline>
-                        </svg>
-                    </span>
-                    <span>下一步</span>
+                <div className={"custom-file"}>
+                    <button type="button" className="btn btn-light btn-lg btn-block" onClick={this.props.lastPage}>
+                        上一步
+                    </button>
+                    <button type="button" className="btn btn-primary btn-lg btn-block" onClick={this.props.nextPage}>
+                        下一步
+                    </button>
+
                 </div>
-                <div className={"float-right"} onClick={this.props.lastPage}>
-                    <span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                             stroke-linejoin="round" className="feather feather-chevrons-left">
-                            <polyline points="11 17 6 12 11 7"></polyline>
-                            <polyline points="18 17 13 12 18 7"></polyline>
-                        </svg>
-                    </span>
-                    <span>上一步</span>
-                </div>
-            </div>
         </div>)
     }
 }
@@ -155,7 +135,8 @@ class Msg extends React.Component {
                 Oops!!
             </div>
             <div className="msg">
-                镜像创建成功! <button className="btn btn-light" onClick={() => window.history.back(-1)}>关闭</button>
+                镜像创建成功! <br />
+                <button className="btn btn-light" onClick={() => window.history.back(-1)}>关闭</button>
             </div>
         </div>)
     }
@@ -164,7 +145,7 @@ class Msg extends React.Component {
 class Main extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {active: 0};
+        this.state = {active: 1};
         this.nextPage = this.nextPage.bind(this);
         this.lastPage = this.lastPage.bind(this);
     }
